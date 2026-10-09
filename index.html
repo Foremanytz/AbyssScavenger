@@ -2,11 +2,12 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <title>深淵拾荒者 Abyss Scavenger</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{width:100%;height:100%;overflow:hidden;background:#04050a;color:#dfe6f0;
-  font-family:"Microsoft JhengHei","微軟正黑體","Segoe UI","Segoe UI Emoji",sans-serif;font-size:15px;user-select:none}
+  font-family:"Microsoft JhengHei","微軟正黑體","Segoe UI","Segoe UI Emoji",sans-serif;font-size:15px;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
 #stage{position:absolute;width:1900px;height:890px;transform-origin:0 0;background:#0b0d14;overflow:hidden;
   box-shadow:0 0 60px rgba(0,0,0,.8)}
 .hidden{display:none!important}
@@ -40,6 +41,7 @@ button.warn{background:#5a2330;border-color:#8a3447}
 .go .big .hero{font-size:110px;filter:drop-shadow(0 0 30px rgba(255,170,60,.5))}
 .go .big p{max-width:760px;line-height:1.8;color:#aab6d0;font-size:16px}
 .go .big button{font-size:24px;padding:16px 60px}
+.gobtns{display:flex;gap:14px}
 .steps{display:flex;gap:14px;margin-top:6px}
 .steps div{background:#1a2238;border-radius:8px;padding:12px 14px;width:240px;font-size:14px;line-height:1.6;color:#c2cde6}
 .steps div b{color:#ffd08a;display:block;font-size:15px}
@@ -84,6 +86,9 @@ kbd{background:#263044;border:1px solid #3d4c6b;border-bottom-width:3px;border-r
 #top .sp{flex:1;overflow:hidden;text-overflow:ellipsis;color:#8f9cbc;font-size:14px}
 #top b{color:#fff}
 #top button{padding:4px 12px;font-size:14px}
+#tinfo{display:flex;align-items:center;gap:22px;flex:1;min-width:0;overflow:hidden}
+#tbtns{display:flex;gap:8px}
+#hud,#ctrl,.dhead{display:none}
 #mapwrap{position:absolute;left:0;top:46px;width:1452px;height:844px;padding:6px;background:#06070b}
 #cv{display:block;width:1440px;height:832px;cursor:crosshair}
 #side{position:absolute;left:1452px;top:46px;width:448px;height:844px;padding:8px;display:flex;flex-direction:column;gap:8px;background:#0d111b;border-left:1px solid #26304a}
@@ -141,6 +146,8 @@ kbd{background:#263044;border:1px solid #3d4c6b;border-bottom-width:3px;border-r
 #modal{position:absolute;inset:0;background:rgba(4,5,10,.72);display:flex;align-items:center;justify-content:center;z-index:20}
 #modal.ing{left:0;top:46px;width:1452px;height:844px;right:auto;bottom:auto}
 .mbox{background:#141a2a;border:1px solid #3d4c6b;border-radius:14px;padding:24px 30px;min-width:560px;max-width:1300px;max-height:800px;overflow-y:auto;box-shadow:0 10px 60px #000;text-align:center}
+.mbox.wide{max-width:1400px;width:1400px;padding:18px 30px}
+.mbox.sumbox{min-width:820px}
 .mbox h2{color:#ffd08a;font-size:26px;margin-bottom:6px}
 .mbox .sub{color:#aab6d0;margin-bottom:16px;line-height:1.6}
 .cards{display:flex;gap:14px;justify-content:center}
@@ -173,21 +180,105 @@ kbd{background:#263044;border:1px solid #3d4c6b;border-bottom-width:3px;border-r
 #tip{position:fixed;z-index:99;max-width:330px;background:#0b0e17;border:1px solid #4a5b82;border-radius:8px;padding:9px 12px;font-size:14px;line-height:1.6;pointer-events:none;display:none;box-shadow:0 4px 20px #000}
 #tip small{color:#8f9cbc}#tip .ok{color:#8fe08f}#tip .no{color:#5d6a8a}
 #ghost{position:fixed;z-index:98;width:48px;height:48px;font-size:36px;line-height:48px;text-align:center;pointer-events:none;display:none;filter:drop-shadow(0 4px 8px #000)}
+
+/* ---------- mobile / touch ---------- */
+body.mob{font-size:14px}
+.mob #stage{position:fixed;left:0;top:0;width:100%;height:100%;box-shadow:none}
+.mob #hub{display:flex;flex-direction:column}
+.mob .hhead{height:auto;padding:10px 14px 6px;flex-wrap:wrap;gap:6px}
+.mob .logo{font-size:24px;letter-spacing:3px}
+.mob .logo span{display:block;margin:2px 0 0;font-size:10px;letter-spacing:3px}
+.mob .cur{font-size:14px;gap:14px}.mob .cur b{font-size:17px}
+.mob .tabs{height:42px;flex:none;padding:0 8px;overflow-x:auto;overflow-y:hidden;scrollbar-width:none}
+.mob .tabs::-webkit-scrollbar{display:none}
+.mob .tabs button{flex:none;padding:0 12px;font-size:14px;white-space:nowrap}
+.mob #hbody{position:static;flex:1;min-height:0;padding:12px 12px max(12px,env(safe-area-inset-bottom))}
+.mob .go{grid-template-columns:1fr;height:auto;gap:12px}
+.mob .go .big{padding:18px 14px;gap:12px}
+.mob .go .big .hero{font-size:64px}
+.mob .go .big p{font-size:14px;line-height:1.7}
+.mob .go .big button{font-size:19px;padding:12px 26px}
+.mob .gobtns{flex-wrap:wrap;justify-content:center}
+.mob .steps{flex-direction:column;gap:8px;width:100%}
+.mob .steps div{width:auto;text-align:left}
+.mob .recs{font-size:13px;gap:4px 12px}
+.mob .grid3,.mob .ml{grid-template-columns:1fr}
+.mob .up{padding:10px}.mob .up .ui{font-size:28px;width:36px}.mob .up button{min-width:84px;padding:7px 8px}
+.mob .cx{grid-template-columns:repeat(auto-fill,minmax(78px,1fr))}
+.mob .help{columns:1;font-size:15px;line-height:1.75}.mob .help h3{font-size:18px}
+.mob.land .grid3,.mob.land .ml,.mob.land .go{grid-template-columns:1fr 1fr}
+.mob #game{display:flex;flex-direction:column}
+.mob #top{height:auto;min-height:38px;padding:4px 8px;gap:6px;font-size:13px;flex:none;padding-top:max(4px,env(safe-area-inset-top))}
+.mob #tinfo{gap:4px 10px;flex-wrap:wrap;white-space:nowrap}
+.mob #top .ttl{font-size:14px}.mob #top .sp{display:none}
+.mob #top button{padding:4px 10px;font-size:15px}
+.mob #hud{display:block;flex:none;padding:4px 8px;background:#10141f;border-bottom:1px solid #26304a}
+#hud .hr{display:flex;gap:8px;align-items:center;font-size:13px;white-space:nowrap}
+#hud .bar{flex:1;margin:0;height:18px}#hud .bar span{line-height:16px;font-size:12px}
+#hud .bar.xp{flex:none;width:28%}#hud .bar.xp span{line-height:16px;font-size:11px}
+#hud .hl{font-size:12px;color:#aab6d0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:3px;height:17px}
+#hud .hl div{overflow:hidden;text-overflow:ellipsis}
+#hud .hl .g{color:#ffd08a}#hud .hl .r{color:#ff8a80}#hud .hl .b{color:#8fd0ff}#hud .hl .v{color:#8fe08f}
+.mob #mapwrap{position:relative;left:auto;top:auto;width:auto;height:auto;flex:1;min-height:0;padding:0}
+.mob #cv{width:100%;height:100%;touch-action:none;cursor:default}
+.mob #ctrl{display:flex;flex:none;gap:8px;padding:6px 8px;padding-bottom:max(6px,env(safe-area-inset-bottom));background:#0d111b;border-top:1px solid #26304a}
+#dpad{display:grid;grid-template-columns:repeat(3,48px);grid-template-rows:repeat(3,48px);gap:4px;flex:none;touch-action:none}
+#dpad button{padding:0;font-size:20px;touch-action:none}
+#acts{flex:1;display:grid;grid-template-columns:repeat(4,1fr);grid-auto-rows:1fr;gap:5px;min-width:0}
+#acts button{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:2px;min-width:0;white-space:nowrap}
+#acts .hot{background:#1f4a6b;border-color:#8fd0ff;box-shadow:0 0 8px #8fd0ff}
+.mob.land #game{display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-rows:auto auto minmax(0,1fr)}
+.mob.land #top{grid-column:1/3}.mob.land #hud{grid-column:1;grid-row:2}.mob.land #mapwrap{grid-column:1;grid-row:3}
+.mob.land #ctrl{grid-column:2;grid-row:2/4;flex-direction:column;justify-content:flex-end;width:216px;border-top:none;border-left:1px solid #26304a;padding-right:max(8px,env(safe-area-inset-right))}
+.mob.land #acts{flex:none;grid-auto-rows:46px}
+.mob.land #dpad{align-self:center}
+.mob #side{position:absolute;left:0;right:0;bottom:0;top:auto;width:auto;height:min(80%,660px);z-index:26;border-left:none;border-top:1px solid #3d4c6b;overflow-y:auto;overscroll-behavior:contain;
+  transform:translateY(105%);transition:transform .2s;box-shadow:0 -10px 40px #000;padding-bottom:max(8px,env(safe-area-inset-bottom))}
+.mob.land #side{left:auto;top:0;height:auto;width:min(440px,72%);border-top:none;border-left:1px solid #3d4c6b;transform:translateX(105%)}
+.mob #side.open{transform:none}
+.mob #side>*{flex:none}
+.mob .dhead{display:flex;justify-content:space-between;align-items:center;color:#ffd08a;font-size:15px}
+.mob .skbox{display:none}
+.mob #log{max-height:180px;overflow-y:auto}
+.mob .bench{flex-wrap:wrap}
+.mob .slot,.mob .bin{touch-action:none}
+.mob #modal.ing{left:0;top:0;width:100%;height:100%}
+.mob .mbox,.mob .mbox.wide,.mob .mbox.sumbox{min-width:0;width:calc(100% - 16px);max-width:760px;max-height:calc(100% - 16px);padding:16px 12px}
+.mob .mbox h2{font-size:20px}.mob .mbox .sub{font-size:13px;margin-bottom:10px}
+.mob .cards{flex-wrap:wrap;gap:8px}
+.mob .card{flex:1 1 200px;width:auto;min-height:0;padding:10px}
+.mob .card:hover{transform:none;box-shadow:none}
+.mob .card .ic{font-size:36px;margin:2px 0}.mob .card .nm{font-size:16px}
+.mob .list{min-width:0}.mob .li{flex-wrap:wrap;padding:8px}.mob .li .tx{min-width:55%}
+.mob .sum{grid-template-columns:repeat(3,1fr)}.mob .sum b{font-size:18px}
+.mob .mbtns{flex-wrap:wrap}
+.mob #toasts{width:100%;top:104px;padding:0 8px}
+.mob .stats{grid-template-columns:repeat(2,1fr)}
+.mob .toast{font-size:14px;padding:7px 14px;max-width:100%}
+.mob #tip{max-width:min(330px,calc(100vw - 16px))}
+#hV{font-size:13px;letter-spacing:1px;color:#aab6d0}
+@keyframes nag{50%{background:#d58a24;border-color:#ffd08a;color:#fff;box-shadow:0 0 16px #ffb54d}}
+#hub .tabs button.flash{animation:nag 1s ease-in-out infinite}
+#hub .go .big button.nag{font-size:16px;padding:8px 20px;background:#4a3010;border-color:#e69a35;color:#ffe9b8;animation:nag 1s ease-in-out infinite}
+.help .ver{color:#ffd08a;font-size:.9em;margin-bottom:4px}
+@media (prefers-reduced-motion:reduce){#hub .tabs button.flash,#hub .go .big button.nag{animation:none;background:#b8741a;color:#fff}}
 </style>
 </head>
 <body>
 <div id="stage">
   <div id="hub">
     <div class="hhead">
-      <div class="logo">深淵拾荒者<span>ABYSS SCAVENGER</span></div>
+      <div class="logo">深淵拾荒者<span>ABYSS SCAVENGER</span><span id="hV"></span></div>
       <div class="cur"><span data-tip="碎晶：探索中獲得，用於工坊的永久強化">💎 <b id="hS">0</b> 碎晶</span><span data-tip="古核：擊敗首領與達成里程碑獲得，用於解鎖核心盤格位與技能">🔶 <b id="hC">0</b> 古核</span></div>
     </div>
     <div class="tabs" id="htabs"></div>
     <div id="hbody"></div>
   </div>
   <div id="game" class="hidden">
-    <div id="top"></div>
+    <div id="top"><div id="tinfo"></div><div id="tbtns"></div></div>
+    <div id="hud"></div>
     <div id="mapwrap"><canvas id="cv" width="1440" height="832"></canvas></div>
+    <div id="ctrl"><div id="dpad"><span></span><button data-mv="0,-1">▲</button><span></span><button data-mv="-1,0">◀</button><button data-mv="0,0">⏳</button><button data-mv="1,0">▶</button><span></span><button data-mv="0,1">▼</button><span></span></div><div id="acts"></div></div>
     <div id="side"></div>
   </div>
   <div id="toasts"></div>
@@ -211,6 +302,7 @@ const W=45,H=26,TS=32;
 const I=(x,y)=>y*W+x;
 const EF='"Segoe UI Emoji","Noto Color Emoji","Apple Color Emoji",sans-serif';
 const KEY='abyss_scavenger_save_v1';
+const VERSION='2026-10-09 12:04';
 
 // ============================================================ data
 const TAGS={
@@ -425,6 +517,9 @@ function discover(kind,id,name){if(meta.codex[kind][id])return false;meta.codex[
 
 // ============================================================ run state & stats
 let uiDirty=true,mapDirty=true,auto=null,targeting=false,sel=null,drag=null,hover=null,shake=0;
+let MOB=false,drawerOpen=false,V={s:1,w:1440,h:832},MS=1;const cam={x:0,y:0};
+const KT=(k,m)=>MOB?m:k;
+function setHTML(el,h){if(el._h!==h){el._h=h;el.innerHTML=h;}}
 const hasRelic=id=>R.relics.includes(id);
 const slotCount=()=>5+U('slots');
 function getM(ref){return ref==='bin'?null:ref[0]==='r'?R.rig[+ref.slice(1)]:R.bench[+ref.slice(1)];}
@@ -709,7 +804,7 @@ function pickup(i){const o=F.obj[i];if(!o)return;
   if(o.kind==='gold'){const g=addGold(o.amt);floatAt(R.p.x,R.p.y,'+'+g+'🪙','#ffd08a');delete F.obj[i];sfx('pick');mapDirty=true;}
   else if(o.kind==='potion'){R.p.potions++;floatAt(R.p.x,R.p.y,'+🧪','#8fe08f');log('拾取了藥水。','v');delete F.obj[i];sfx('pick');mapDirty=true;}
   else if(o.kind==='loot'){delete F.obj[i];mapDirty=true;chestModal();}
-  else if(o.kind==='stairs'){auto=null;log('發現通往下一層的入口——按 <b>E</b> 下樓。','b');}}
+  else if(o.kind==='stairs'){auto=null;log('發現通往下一層的入口——'+KT('按 <b>E</b> 下樓。','點 <b>⬇️ 下樓</b>。'),'b');}}
 function interact(o,i){
   if(o.kind==='crystal'){const s=addShards(o.amt);floatAt(i%W,(i/W)|0,'+'+s+'💎','#b3e5fc');delete F.obj[i];sfx('pick');mapDirty=true;endTurn();}
   else if(o.kind==='chest'){delete F.obj[i];mapDirty=true;st().chests++;sfx('pick');chestModal();}
@@ -727,7 +822,7 @@ function useSkill(i){
   if(i===0){targeting=false;const dmg=S.atk*1.6*(1+S.skillPct/100);fxRing(p.x,p.y,1.9,'#ffd08a');sfx('skill');shake=6;let n=0;
     for(const e of F.enemies.slice())if(!e.dead&&cheb(e,p)<=1){dealDamage(e,dmg,{color:'#ffd08a'});n++;}
     p.cd[0]=skillCd(0)+1;log(n?`震盪波命中 ${n} 名敵人！`:'震盪波揮空了。');endTurn();}
-  else if(i===1){targeting=!targeting;if(targeting)log('相位閃現：點擊 6 格內看得見的空地（Esc 取消）','b');uiDirty=true;}
+  else if(i===1){targeting=!targeting;if(targeting)log('相位閃現：點擊 6 格內看得見的空地'+KT('（Esc 取消）','（再點一次 🌀 取消）'),'b');uiDirty=true;}
   else{targeting=false;p.over=4;p.cd[2]=skillCd(2);sfx('skill');floatAt(p.x,p.y,'過載！','#ffd54f',true);log('過載啟動：4 回合內傷害加倍！','g');uiDirty=true;}
 }
 function doBlink(x,y){const p=R.p,i=I(x,y);if(cheb({x,y},p)>6||!F.tiles[i]||!F.vis[i]||F.occ[i]||(F.obj[i]&&BLOCK[F.obj[i].kind])||(x===p.x&&y===p.y)){log('無法閃現到那裡。');return false;}
@@ -744,7 +839,7 @@ function autoStep(){
     const t=exploreTarget();
     if(!t){let si=-1;for(const k in F.obj)if(F.obj[k].kind==='stairs')si=+k;
       if(si>=0&&si!==I(p.x,p.y)){const path=pathTo(si);if(path&&path.length){log('本層已探索完畢，前往樓梯。');auto={mode:'path',path,bump:-1};return true;}}
-      log(si>=0?'本層已探索完畢。按 <b>E</b> 下樓。':'沒有可探索的地方了。');auto=null;return false;}
+      log(si>=0?'本層已探索完畢。'+KT('按 <b>E</b> 下樓。','點 <b>⬇️ 下樓</b>。'):'沒有可探索的地方了。');auto=null;return false;}
     auto.path=t.path;auto.bump=t.bump;if(!t.path.length&&t.bump<0){auto=null;return false;}
     return true;
   }
@@ -796,6 +891,7 @@ function choiceModal(o){
     h+='</div><div class="mbtns">';
     if(o.reroll&&R.rerolls>0)h+=btn(m,`🎲 重擲（剩 ${R.rerolls} 次）`,()=>{R.rerolls--;m.opts=o.gen();renderModal();});
     if(o.skip)h+=btn(m,o.skip.label,()=>{closeModal();o.skip.act();uiDirty=true;});
+    if(MOB&&R)h+=btn(m,'🧩 核心盤',()=>toggleDrawer(true));
     return h+'</div></div>';};
   m.key=k=>{const n=+k;if(n>=1&&n<=m.opts.length){m.acts[n-1]();return true;}};
   pushModal(m);return m;
@@ -827,12 +923,12 @@ function shopModal(o){
   m.html=()=>{let h=`<div class="mbox"><h2>🧑‍🔧 流浪技師</h2><p class="sub">「看看有什麼需要的？」　持有 🪙 <b>${R.gold}</b></p><div class="list">`;
     for(const it of o.stock){let ic,nm,ds;
       if(it.type==='mod'){const md=MOD[it.mod.id],t=TAGS[md.tag];ic=md.icon;nm=`<span style="color:${t.color}">${md.name} ${'★'.repeat(it.mod.lv)}</span> <small style="display:inline">${t.icon}${t.name}</small>`;ds=modDesc(md,it.mod.lv,1);}
-      else if(it.type==='potion'){ic='🧪';nm='藥水';ds='回復 40% 最大生命（按 Q 使用）';}
+      else if(it.type==='potion'){ic='🧪';nm='藥水';ds='回復 40% 最大生命'+KT('（按 Q 使用）','（點 🧪 使用）');}
       else if(it.type==='heal'){ic='🔧';nm='緊急修理';ds='立即回復 50% 最大生命';}
       else{const r=REL[it.id];ic=r.icon;nm=`<span style="color:#ffd08a">遺物：${r.name}</span>`;ds=r.d;}
       const can=!it.sold&&R.gold>=it.price&&(it.type!=='mod'||canAdd(it.mod))&&!(it.type==='heal'&&R.p.hp>=R.stats.maxHp);
       h+=`<div class="li ${it.sold?'sold':''}"><span class="ic">${ic}</span><div class="tx"><b>${nm}</b><small>${ds}</small></div>`+btn(m,it.sold?'已售出':`🪙 ${it.price}`,()=>{m.buy(it);renderModal();},'',!can)+'</div>';}
-    return h+'</div><div class="mbtns">'+btn(m,'離開（Esc）',m.leave)+'</div></div>';};
+    return h+'</div><div class="mbtns">'+(MOB?btn(m,'🧩 核心盤',()=>toggleDrawer(true)):'')+btn(m,'離開（Esc）',m.leave)+'</div></div>';};
   return m;
 }
 const forgeCost=lv=>Math.round(((lv===1?60:160)+R.depth*(lv===1?10:25))*(1+.25*R.forgeN));
@@ -859,7 +955,7 @@ function shrineModal(o,i){
     return a.map(c=>{const f=c.act;c.act=()=>{f();delete F.obj[i];mapDirty=true;sfx('mile');};return c;});},
     skip:{label:'暫時離開',act:()=>{}}});
 }
-function helpHTML(){return `<h3>目標</h3>
+function helpHTML(){return `<div class="ver">版本：<b>${VERSION}</b>（台灣時間 UTC+8）</div><h3>目標</h3>
 一層層往下探索，蒐集<b>模組</b>組裝你的<b>核心盤</b>，擊敗第 4、8 層的首領。每次擊敗首領後都可以選擇凱旋而歸（碎晶 +25%），或繼續往下挑戰。<br>
 每場帶回的 💎 碎晶可在基地<b>工坊</b>永久強化；達成<b>里程碑</b>與擊敗首領可獲得 🔶 古核，解鎖更多格位與技能。
 <h3>操作</h3>
@@ -868,8 +964,13 @@ function helpHTML(){return `<h3>目標</h3>
 <kbd>F</kbd> 自動探索　<kbd>空白鍵</kbd> 原地等待一回合　<kbd>E</kbd> 下樓<br>
 <kbd>1</kbd> 震盪波　<kbd>2</kbd> 相位閃現　<kbd>3</kbd> 過載　<kbd>Q</kbd> 喝藥水<br>
 選項視窗可按 <kbd>1</kbd>~<kbd>4</kbd> 快速選擇，<kbd>Esc</kbd> 離開商店／取消
+<h3>手機／觸控操作</h3>
+畫面下方<b>方向鍵</b>：移動／撞擊敵人即攻擊（按住可連續移動），中間 ⏳ 原地等待一回合<br>
+<b>點地圖</b>：走到該處；點自己：站在 🕳️ 上時下樓，否則等待一回合<br>
+操作列：💥 震盪波　🌀 相位閃現　🔆 過載　🧪 藥水　🧭 自動探索　⬇️ 下樓　🧩 打開核心盤　🔍 切換地圖縮放<br>
+<b>長按</b>敵人、物件、模組或按鈕可查看說明
 <h3>核心盤（組裝）</h3>
-用滑鼠<b>拖曳</b>右側的模組來擺放（也可以先點一下再點目的地）。<br>
+用滑鼠或手指<b>拖曳</b>核心盤上的模組來擺放（也可以先點一下再點目的地）。手機請點 🧩 打開核心盤。<br>
 ・<b>連結</b>：上下左右相鄰的同屬性模組，每條連結使雙方效果 +15%。<br>
 ・<b>合成</b>：把模組拖到「相同名稱、相同星數」的模組上，升一星（★→★★→★★★）。<br>
 ・<b>共鳴</b>：同屬性的星數點數（★=1、★★=2、★★★=4）累計達 3／6／10 點，啟動屬性共鳴效果。<br>
@@ -877,12 +978,14 @@ function helpHTML(){return `<h3>目標</h3>
 <h3>地圖上的東西</h3>
 📦 寶箱：三選一模組　💎 晶簇：碎晶　🪙 金幣　🧪 藥水<br>
 ⚒️ 鍛造台：升星／重鑄　🧑‍🔧 技師：商店　⛩️ 神龕：三種恩賜擇一　🕳️ 下一層<br>
-把滑鼠移到敵人或物件上可以看說明。完整探索一層有額外獎勵。
+把滑鼠移到（手機為長按）敵人或物件上可以看說明。完整探索一層有額外獎勵。
 <h3>小提示</h3>
 ・首領蓄力時地上會出現<b>紅色警示</b>，2 回合後爆發，請走出範圍。<br>
-・倒下不會失去碎晶；每次回基地都會變得更強。<br>
-・進度會自動儲存在這個瀏覽器裡。`;}
-function helpModal(){const m={kind:'help',full:false};m.leave=()=>closeModal();m.html=()=>`<div class="mbox" style="max-width:1400px;width:1400px;padding:18px 30px"><h2>📖 遊戲說明</h2><div class="help" style="text-align:left">${helpHTML()}</div><div class="mbtns">`+btn(m,'開始探索（Esc）',m.leave,'pri')+'</div></div>';return m;}
+・倒下不會失去碎晶；每次回基地都會變得更強。
+<h3>存檔</h3>
+・進度會自動儲存在這個瀏覽器的本機儲存空間（localStorage），不會上傳到任何伺服器。<br>
+・清除瀏覽器的網站資料、使用無痕／私密瀏覽、換瀏覽器或換裝置時，都看不到原本的進度。`;}
+function helpModal(){const m={kind:'help',full:false};m.leave=()=>closeModal();m.html=()=>`<div class="mbox wide"><h2>📖 遊戲說明</h2><div class="help" style="text-align:left">${helpHTML()}</div><div class="mbtns">`+btn(m,'開始探索（Esc）',m.leave,'pri')+'</div></div>';return m;}
 function quitModal(){const m={kind:'quit'};m.leave=()=>closeModal();m.html=()=>`<div class="mbox"><h2>結束這場探索？</h2><p class="sub">已獲得的 💎 ${R.shards} 碎晶會帶回基地。</p><div class="mbtns">`+btn(m,'結束並回基地',()=>{closeModal();endRun('dead');},'warn')+btn(m,'繼續探索（Esc）',m.leave)+'</div></div>';return m;}
 function endRun(kind){
   if(R.over)return;R.over=true;auto=null;targeting=false;modalQ=[];
@@ -891,7 +994,7 @@ function endRun(kind){
   if(kind==='dead')sfx('bad');
   const mm=Math.floor(R.elapsed/60),ss=String(Math.floor(R.elapsed%60)).padStart(2,'0');
   const m={kind:'summary'};m.leave=()=>{closeModal();showHub();};
-  m.html=()=>`<div class="mbox" style="min-width:820px"><h2>${kind==='return'?'🏆 凱旋而歸':'💀 探索結束'}</h2><p class="sub">${kind==='return'?'你帶著滿滿的戰利品回到了基地。':'這次倒在了第 '+R.depth+' 層。帶回的碎晶會讓下一次走得更遠。'}</p>
+  m.html=()=>`<div class="mbox sumbox"><h2>${kind==='return'?'🏆 凱旋而歸':'💀 探索結束'}</h2><p class="sub">${kind==='return'?'你帶著滿滿的戰利品回到了基地。':'這次倒在了第 '+R.depth+' 層。帶回的碎晶會讓下一次走得更遠。'}</p>
     <div class="sum"><div><b>${R.depth}</b><small>抵達層數</small></div><div><b>${R.kills}</b><small>擊殺</small></div><div><b>Lv.${R.p.lvl}</b><small>等級</small></div><div><b>${mm}:${ss}</b><small>用時</small></div><div><b style="color:#b3e5fc">💎 ${total}</b><small>帶回碎晶${bonus?`（含凱旋 +${bonus}）`:''}</small></div></div>
     ${R.newMiles.length?`<div class="newl">🏆 達成里程碑：<b>${R.newMiles.join('、')}</b></div>`:''}
     ${R.newCodex.length?`<div class="newl">📘 圖鑑新增 ${R.newCodex.length} 項：${R.newCodex.join('、')}</div>`:''}
@@ -903,7 +1006,7 @@ function endRun(kind){
 const cv=$('#cv'),ctx=cv.getContext('2d'),mapCv=document.createElement('canvas');mapCv.width=W*TS;mapCv.height=H*TS;const mctx=mapCv.getContext('2d');
 function emo(c,ch,x,y,size){c.font=`${size}px ${EF}`;c.textAlign='center';c.textBaseline='middle';c.fillText(ch,x,y+size*.06);}
 function drawMap(){
-  const c=mctx,th=F.theme;c.fillStyle='#06070b';c.fillRect(0,0,W*TS,H*TS);
+  const c=mctx,th=F.theme;c.setTransform(MS,0,0,MS,0,0);c.fillStyle='#06070b';c.fillRect(0,0,W*TS,H*TS);
   for(let y=0;y<H;y++)for(let x=0;x<W;x++){const i=I(x,y);if(!F.seen[i])continue;const px=x*TS,py=y*TS;
     if(F.tiles[i]){c.fillStyle=((x*7+y*13)%5===0)?th.f2:th.f;c.fillRect(px,py,TS,TS);c.fillStyle='rgba(0,0,0,.16)';c.fillRect(px,py+TS-1,TS,1);c.fillRect(px+TS-1,py,1,TS);}
     else{c.fillStyle=th.w;c.fillRect(px,py,TS,TS);c.fillStyle=th.t;c.fillRect(px,py,TS,TS-10);c.fillStyle='rgba(255,255,255,.07)';c.fillRect(px,py,TS,3);c.fillStyle='rgba(0,0,0,.2)';c.fillRect(px+TS-1,py,1,TS);}}
@@ -920,9 +1023,12 @@ function frame(ts){
   if(!R||!F)return;
   if(!R.over)R.elapsed+=dt;
   if(mapDirty){drawMap();mapDirty=false;}
-  const c=ctx,p=R.p,k=Math.min(1,dt*18),now=ts/1000;
-  c.save();if(shake>.3){c.translate((Math.random()-.5)*shake,(Math.random()-.5)*shake);shake*=Math.pow(.002,dt);}else shake=0;
-  c.drawImage(mapCv,0,0);
+  const c=ctx,p=R.p,k=Math.min(1,dt*18),now=ts/1000,MW=W*TS,MH=H*TS;
+  p.rx+=(p.x-p.rx)*k;p.ry+=(p.y-p.ry)*k;
+  cam.x=MW<=V.w?(MW-V.w)/2:clamp(p.rx*TS+TS/2-V.w/2,0,MW-V.w);cam.y=MH<=V.h?(MH-V.h)/2:clamp(p.ry*TS+TS/2-V.h/2,0,MH-V.h);
+  c.setTransform(V.s,0,0,V.s,0,0);c.fillStyle='#06070b';c.fillRect(0,0,V.w,V.h);
+  c.save();c.translate(-cam.x,-cam.y);if(shake>.3){c.translate((Math.random()-.5)*shake,(Math.random()-.5)*shake);shake*=Math.pow(.002,dt);}else shake=0;
+  c.drawImage(mapCv,0,0,MW,MH);
   // telegraphs
   for(const t of R.tele){c.fillStyle=`rgba(255,60,60,${.28+.18*Math.sin(now*10)})`;for(const i of t.cells)c.fillRect((i%W)*TS+1,((i/W)|0)*TS+1,TS-2,TS-2);
     c.fillStyle='#fff';c.font='bold 15px sans-serif';c.textAlign='center';c.textBaseline='middle';const pi=I(p.x,p.y);if(t.cells.includes(pi))c.fillText('危險 '+t.t,p.rx*TS+TS/2,p.ry*TS-8);}
@@ -945,13 +1051,12 @@ function frame(ts){
     if(e.fuse>0){c.fillStyle='#ff5252';c.font='bold 16px sans-serif';c.textAlign='center';c.fillText('💥'+e.fuse,x,y-TS/2-8);}
   }
   // player
-  p.rx+=(p.x-p.rx)*k;p.ry+=(p.y-p.ry)*k;
   {const x=p.rx*TS+TS/2,y=p.ry*TS+TS/2;
     c.fillStyle='rgba(0,0,0,.4)';c.beginPath();c.ellipse(x,y+TS*.38,TS*.32,TS*.12,0,0,7);c.fill();
     if(p.over>0){c.fillStyle=`rgba(255,213,79,${.25+.15*Math.sin(now*12)})`;c.beginPath();c.arc(x,y,TS*.62,0,7);c.fill();}
     if(p.shield>0){c.strokeStyle='#7fd4ff';c.lineWidth=2;c.beginPath();c.arc(x,y,TS*.52,0,7);c.stroke();}
     c.fillStyle='#fff';emo(c,'🧑‍🚀',x,y,26);
-    const o=F.obj[I(p.x,p.y)];if(o&&o.kind==='stairs'&&!modalQ.length){c.font='bold 15px "Microsoft JhengHei",sans-serif';c.textAlign='center';c.lineWidth=4;c.strokeStyle='#000';c.strokeText('按 E 下樓',x,y-TS*.85);c.fillStyle='#8fd0ff';c.fillText('按 E 下樓',x,y-TS*.85);}}
+    const o=F.obj[I(p.x,p.y)];if(o&&o.kind==='stairs'&&!modalQ.length){const lb=KT('按 E 下樓','點自己或 ⬇️ 下樓');c.font='bold 15px "Microsoft JhengHei",sans-serif';c.textAlign='center';c.lineWidth=4;c.strokeStyle='#000';c.strokeText(lb,x,y-TS*.85);c.fillStyle='#8fd0ff';c.fillText(lb,x,y-TS*.85);}}
   // fx
   for(let i=R.fx.length-1;i>=0;i--){const f=R.fx[i];f.t+=dt;const a=1-f.t/.35;if(a<=0){R.fx.splice(i,1);continue;}
     c.globalAlpha=a;
@@ -964,22 +1069,34 @@ function frame(ts){
     c.globalAlpha=Math.min(1,a*2);c.font=`bold ${f.big?20:15}px "Microsoft JhengHei",${EF}`;c.textAlign='center';c.textBaseline='middle';const x=f.x*TS+TS/2,y=f.y*TS-f.t*34;
     c.lineWidth=4;c.strokeStyle='#000';c.strokeText(f.txt,x,y);c.fillStyle=f.color||'#fff';c.fillText(f.txt,x,y);c.globalAlpha=1;}
   c.restore();
-  if(boss){const w=620,x=(W*TS-w)/2,f=clamp(boss.hp/boss.maxHp,0,1);c.fillStyle='rgba(0,0,0,.7)';c.fillRect(x-4,10,w+8,30);c.fillStyle='#8a1f2b';c.fillRect(x,14,w*f,22);
+  if(boss){const w=Math.min(620,V.w-16),x=(V.w-w)/2,f=clamp(boss.hp/boss.maxHp,0,1);c.fillStyle='rgba(0,0,0,.7)';c.fillRect(x-4,10,w+8,30);c.fillStyle='#8a1f2b';c.fillRect(x,14,w*f,22);
     c.font='bold 15px "Microsoft JhengHei",sans-serif';c.textAlign='center';c.textBaseline='middle';c.fillStyle='#fff';c.fillText(`${boss.def.name}　${Math.ceil(boss.hp)} / ${boss.maxHp}`,x+w/2,26);}
   const sec=Math.floor(R.elapsed);if(sec!==lastSec){lastSec=sec;uiDirty=true;}
-  if(uiDirty){renderSide();renderTop();uiDirty=false;}
+  if(uiDirty){renderSide();renderTop();if(MOB){renderHud();renderCtrl();}uiDirty=false;}
 }
 
 // ============================================================ rendering (panels)
 function renderTop(){
   const mm=Math.floor(R.elapsed/60),ss=String(Math.floor(R.elapsed%60)).padStart(2,'0'),g=nextGoals(1)[0];
-  $('#top').innerHTML=`<span class="ttl">第 ${R.depth} 層 · ${F.boss?'首領巢穴':F.theme.name}</span>
+  setHTML($('#tinfo'),`<span class="ttl">第 ${R.depth} 層 · ${F.boss?'首領巢穴':F.theme.name}</span>
    <span data-tip="已探索的比例。完整探索一層可獲得額外金幣與碎晶">🗺️ <b>${F.boss?'—':Math.floor(F.explN/F.floorN*100)+'%'}</b></span>
    <span>⏱ <b>${mm}:${ss}</b></span><span>☠ <b>${R.kills}</b></span>
    <span data-tip="金幣：本場使用，可在技師與鍛造台消費">🪙 <b>${R.gold}</b></span><span data-tip="碎晶：探索結束後帶回基地，用於永久強化">💎 <b>${R.shards}</b></span>
-   <span class="sp">${g?`🎯 下個里程碑：${g.name}（${g.desc}　${fmt(Math.min(g.val(),g.goal))}/${g.goal}）`:''}</span>
-   <button data-act="help">說明 (H)</button><button data-act="mute">${meta.mute?'🔇':'🔊'}</button><button data-act="quit">結束探索</button>`;
+   <span class="sp">${g?`🎯 下個里程碑：${g.name}（${g.desc}　${fmt(Math.min(g.val(),g.goal))}/${g.goal}）`:''}</span>`);
+  setHTML($('#tbtns'),`<button data-act="help">${KT('說明 (H)','📖')}</button><button data-act="mute">${meta.mute?'🔇':'🔊'}</button><button data-act="quit">${KT('結束探索','✕')}</button>`);
 }
+function renderHud(){const p=R.p,S=R.stats,need=xpNeed(p.lvl);
+  setHTML($('#hud'),`<div class="hr"><b>Lv.${p.lvl}</b><div class="bar hp"><i style="width:${clamp(p.hp/S.maxHp*100,0,100)}%"></i>${p.shield>0?`<u style="width:${clamp(p.shield/S.maxHp*100,0,100)}%"></u>`:''}<span>❤️ ${Math.max(0,Math.ceil(p.hp))} / ${S.maxHp}${p.shield>0?`　🛡 ${Math.ceil(p.shield)}`:''}</span></div><div class="bar xp"><i style="width:${clamp(p.xp/need*100,0,100)}%"></i><span>經驗 ${Math.floor(p.xp)}/${need}</span></div>${p.poisonT>0?'<span style="color:#9ccc65">☠</span>':''}${p.over>0?`<span style="color:#ffd54f">🔆${p.over}</span>`:''}</div><div class="hl">${R.log[0]||''}</div>`);}
+const skTip=i=>{const ok=skillOk(i);return esc(`<b>${SK[i].icon} ${SK[i].name}</b><br>${SK[i].d}<br><small>冷卻 ${ok?skillCd(i):SK[i].cd} 回合${ok?'':'　🔒 需在基地工坊以古核解鎖'}</small>`);};
+function renderCtrl(){const p=R.p,o=F.obj[I(p.x,p.y)],onSt=!!(o&&o.kind==='stairs');let h='';
+  for(let i=0;i<3;i++){const ok=skillOk(i),cd=p.cd[i];h+=`<button class="sk ${i===1&&targeting?'act':''}" data-act="sk${i}" ${ok?'':'disabled'} data-tip="${skTip(i)}"><span class="e">${ok?SK[i].icon:'🔒'}</span>${SK[i].name}${cd>0?`<span class="cdm">${cd}</span>`:''}</button>`;}
+  h+=`<button class="sk" data-act="potion" data-tip="喝藥水：回復 ${hasRelic('alch')?60:40}% 最大生命並解毒（消耗一回合）"><span class="e">🧪</span>藥水×${p.potions}</button>
+   <button class="sk" data-act="explore" data-tip="自動探索：自動走向未探索區域並拾取物品，看見敵人時停止"><span class="e">🧭</span>自動探索</button>
+   <button class="sk ${onSt?'hot':''}" data-act="desc" data-tip="站在 🕳️ 上時前往下一層"><span class="e">⬇️</span>下樓</button>
+   <button class="sk" data-act="drawer" data-tip="打開核心盤、角色數值、遺物與紀錄"><span class="e">🧩</span>核心盤</button>
+   <button class="sk" data-act="zoom" data-tip="切換地圖縮放：近、中、全圖"><span class="e">🔍</span>縮放</button>`;
+  setHTML($('#acts'),h);}
+function toggleDrawer(v){drawerOpen=v===undefined?!drawerOpen:!!v;$('#side').classList.toggle('open',drawerOpen);hideTip();}
 function slotHTML(ref,style,locked){
   if(locked)return `<div class="slot locked" style="${style}" data-tip="尚未解鎖。回基地後在工坊購買「核心擴充」">🔒</div>`;
   const m=getM(ref);if(!m)return `<div class="slot" style="${style}" data-slot="${ref}"></div>`;
@@ -998,7 +1115,7 @@ function setTip(tag){const t=TAGS[tag],pts=R.stats.pts[tag];let h=`<b style="col
 function renderSide(){
   const p=R.p,S=R.stats,need=xpNeed(p.lvl),n=slotCount();
   let more='<b>全部數值</b>';for(const k in STAT_NAME){const v=S[k];if(v&&!(k==='vision'))more+=`<br>${STAT_NAME[k]}：${fmt(Math.round(v*100)/100)}`;}more+=`<br>傷害倍率：×${fmt(Math.round(S.dmgMult*100)/100)}<br>視野：${S.vision}`;
-  let h=`<div class="box"><div class="row1"><span>🧑‍🚀 拾荒者 <b>Lv.${p.lvl}</b>${p.poisonT>0?' <span style="color:#9ccc65">☠中毒</span>':''}${p.over>0?' <span style="color:#ffd54f">🔆過載'+p.over+'</span>':''}</span><span data-tip="${esc(more)}" style="color:#8f9cbc;font-size:13px">ⓘ 全部數值</span></div>
+  let h=`<div class="dhead"><b>🧩 核心盤與狀態</b><button data-act="drawer">✕ 關閉</button></div><div class="box"><div class="row1"><span>🧑‍🚀 拾荒者 <b>Lv.${p.lvl}</b>${p.poisonT>0?' <span style="color:#9ccc65">☠中毒</span>':''}${p.over>0?' <span style="color:#ffd54f">🔆過載'+p.over+'</span>':''}</span><span data-tip="${esc(more)}" style="color:#8f9cbc;font-size:13px">ⓘ 全部數值</span></div>
    <div class="bar hp"><i style="width:${clamp(p.hp/S.maxHp*100,0,100)}%"></i>${p.shield>0?`<u style="width:${clamp(p.shield/S.maxHp*100,0,100)}%"></u>`:''}<span>❤️ ${Math.max(0,Math.ceil(p.hp))} / ${S.maxHp}${p.shield>0?`　🛡 ${Math.ceil(p.shield)}`:''}</span></div>
    <div class="bar xp"><i style="width:${clamp(p.xp/need*100,0,100)}%"></i><span>經驗 ${Math.floor(p.xp)} / ${need}</span></div>
    <div class="stats"><div data-tip="每次攻擊的基礎傷害">⚔️攻擊<b>${S.atk}</b></div><div data-tip="每點護甲減少 1 點受到的傷害（最少仍受 25%）">🛡️護甲<b>${S.def}</b></div><div data-tip="暴擊機率">🎯暴擊<b>${fmt(Math.round(S.crit))}%</b></div><div data-tip="暴擊時的傷害倍率">💢暴傷<b>${fmt(Math.round(S.critDmg))}%</b></div>
@@ -1014,30 +1131,32 @@ function renderSide(){
   for(let i=0;i<R.bench.length;i++)h+=slotHTML('b'+i,'',false);
   h+=`<div class="bin" data-slot="bin" data-tip="把模組拖到這裡拆解：★ 12、★★ 35、★★★ 90 金幣">♻️<span>拆解</span></div></div></div>`;
   h+=`<div class="box"><h4><span>遺物</span><span>${R.relics.length}</span></h4><div class="relics">${R.relics.length?R.relics.map(id=>`<span data-tip="${esc(`<b style='color:#ffd08a'>${REL[id].icon} ${REL[id].name}</b><br>${REL[id].d}`)}">${REL[id].icon}</span>`).join(''):'<em>擊敗首領、神龕或技師處可取得</em>'}</div></div>`;
-  h+='<div class="box"><div class="skills">';
+  h+='<div class="box skbox"><div class="skills">';
   for(let i=0;i<3;i++){const ok=skillOk(i),cd=p.cd[i];
-    h+=`<button class="sk ${i===1&&targeting?'act':''}" data-act="sk${i}" ${ok?'':'disabled'} data-tip="${esc(`<b>${SK[i].icon} ${SK[i].name}</b><br>${SK[i].d}<br><small>冷卻 ${ok?skillCd(i):SK[i].cd} 回合${ok?'':'　🔒 需在基地工坊以古核解鎖'}</small>`)}"><kbd>${i+1}</kbd><span class="e">${ok?SK[i].icon:'🔒'}</span>${SK[i].name}${cd>0?`<span class="cdm">${cd}</span>`:''}</button>`;}
+    h+=`<button class="sk ${i===1&&targeting?'act':''}" data-act="sk${i}" ${ok?'':'disabled'} data-tip="${skTip(i)}"><kbd>${i+1}</kbd><span class="e">${ok?SK[i].icon:'🔒'}</span>${SK[i].name}${cd>0?`<span class="cdm">${cd}</span>`:''}</button>`;}
   h+=`<button class="sk" data-act="potion" data-tip="喝藥水：回復 ${hasRelic('alch')?60:40}% 最大生命並解毒（消耗一回合）"><kbd>Q</kbd><span class="e">🧪</span>藥水 ×${p.potions}</button>
    <button class="sk" data-act="explore" data-tip="自動探索：自動走向未探索區域並拾取物品，看見敵人時停止"><kbd>F</kbd><span class="e">🧭</span>自動探索</button>
    <button class="sk" data-act="wait" data-tip="原地等待一回合（讓敵人先靠過來）"><kbd>␣</kbd><span class="e">⏳</span>等待</button></div></div>`;
   h+=`<div class="box" id="log">${R.log.join('')}</div>`;
-  $('#side').innerHTML=h;
+  setHTML($('#side'),h);
 }
 
 // ============================================================ hub
 let hubTab='go';const hubM={acts:[]};let resetArm=false;
-function showHub(){R=null;F=null;modalQ=[];renderModal();$('#game').classList.add('hidden');$('#hub').classList.remove('hidden');checkMiles();renderHub();}
+function showHub(){R=null;F=null;modalQ=[];toggleDrawer(false);renderModal();$('#game').classList.add('hidden');$('#hub').classList.remove('hidden');checkMiles();renderHub();}
+const canBuy=u=>{const l=U(u.id);return l<u.max&&(u.cur==='s'?meta.shards:meta.cores)>=u.cost(l);};
+const buyableN=()=>UPG.filter(canBuy).length;
 function buy(u){const l=U(u.id);if(l>=u.max)return false;const c=u.cost(l);if(u.cur==='s'){if(meta.shards<c)return false;meta.shards-=c;}else{if(meta.cores<c)return false;meta.cores-=c;}meta.up[u.id]=l+1;sfx('merge');save();return true;}
 function renderHub(){
-  hubM.acts=[];$('#hS').textContent=fmt(meta.shards);$('#hC').textContent=meta.cores;
+  hubM.acts=[];$('#hS').textContent=fmt(meta.shards);$('#hC').textContent=meta.cores;$('#hV').textContent='版本 '+VERSION;const nb=buyableN();
   const tabs=[['go','⚔️ 出擊'],['shop','🔧 工坊'],['codex',`📘 圖鑑 ${codexCount()}/${CODEX_TOTAL}`],['miles',`🏆 里程碑 ${Object.keys(meta.done).length}/${MILES.length}`],['help','📖 說明']];
-  $('#htabs').innerHTML=tabs.map(([k,n])=>btn(hubM,n,()=>{hubTab=k;resetArm=false;renderHub();},hubTab===k?'on':'')).join('');
+  $('#htabs').innerHTML=tabs.map(([k,n])=>btn(hubM,n,()=>{hubTab=k;resetArm=false;renderHub();},hubTab===k?'on':(k==='shop'&&nb?'flash':''))).join('');
   let h='';
   if(hubTab==='go'){
     const s=st(),sv=meta.saved;
-    h=`<div class="go"><div class="panel big"><div class="hero">🧑‍🚀</div>
+    h=`<div class="go"><div class="panel big">${nb?btn(hubM,`🔧 有 ${nb} 項工坊升級可以購買 → 前往工坊`,()=>{hubTab='shop';resetArm=false;renderHub();},'nag'):''}<div class="hero">🧑‍🚀</div>
       <p>古老的深淵之下埋藏著失落文明的模組與遺物。<br>下潛、蒐集、組裝你的核心盤——每一次歸來，都會讓下一次走得更遠。</p>
-      <div style="display:flex;gap:14px">${sv?btn(hubM,`▶ 繼續探索（第 ${sv.depth} 層）`,()=>startRun(true),'pri'):''}${btn(hubM,sv?'重新開始':'▶ 開始探索',()=>startRun(false),sv?'':'pri')}</div>
+      <div class="gobtns">${sv?btn(hubM,`▶ 繼續探索（第 ${sv.depth} 層）`,()=>startRun(true),'pri'):''}${btn(hubM,sv?'重新開始':'▶ 開始探索',()=>startRun(false),sv?'':'pri')}</div>
       <div class="steps"><div><b>① 探索</b>每層地圖隨機生成。打怪、開寶箱、採晶簇，找到 🕳️ 前往下一層。</div><div><b>② 組裝</b>把模組擺上核心盤：同屬性相鄰有連結加成，相同模組可合成升星。</div><div><b>③ 成長</b>帶回 💎 碎晶永久強化，達成里程碑解鎖新格位與技能。</div></div>
       <small style="color:#5d6a8a">一場約 10～30 分鐘 ・ 進度自動儲存</small></div>
      <div style="display:flex;flex-direction:column;gap:16px"><div class="panel"><h3>📊 紀錄</h3><div class="recs">
@@ -1072,37 +1191,53 @@ function startRun(resume){
   const sv=meta.saved;R=newRunObj();
   if(resume&&sv){Object.assign(R,{turn:sv.turn,elapsed:sv.elapsed,kills:sv.kills,gold:sv.gold,shards:sv.shards,rerolls:sv.rerolls,forgeN:sv.forgeN||0,relics:sv.relics,newCodex:sv.newCodex||[],newMiles:sv.newMiles||[]});
     for(let i=0;i<9;i++)R.rig[i]=sv.rig[i]||null;for(let i=0;i<R.bench.length;i++)R.bench[i]=(sv.bench||[])[i]||null;Object.assign(R.p,sv.p);}
-  $('#hub').classList.add('hidden');$('#game').classList.remove('hidden');
+  $('#hub').classList.add('hidden');$('#game').classList.remove('hidden');resizeCv();
   computeStats();if(!(resume&&sv))R.p.hp=R.stats.maxHp;
   enterFloor(resume&&sv?sv.depth:1,resume&&sv);
-  if(!(resume&&sv)){log('按 <b>F</b> 自動探索，撞擊敵人即可攻擊。按 <b>H</b> 查看說明。','b');
+  if(!(resume&&sv)){log(KT('按 <b>F</b> 自動探索，撞擊敵人即可攻擊。按 <b>H</b> 查看說明。','點 <b>🧭</b> 自動探索，用方向鍵撞擊敵人即可攻擊。點 <b>📖</b> 查看說明。'),'b');
     for(let i=0;i<U('kit');i++)choiceModal({title:'🎁 預載模組',sub:'挑選一個開局模組',gen:()=>rollModules(3).map(modOpt),reroll:true});
     if(!meta.seenHelp){meta.seenHelp=true;save();pushModal(helpModal());}}
   uiDirty=true;mapDirty=true;
 }
 
 // ============================================================ input
-function tileAt(e){const r=cv.getBoundingClientRect(),x=Math.floor((e.clientX-r.left)/r.width*W),y=Math.floor((e.clientY-r.top)/r.height*H);return x<0||y<0||x>=W||y>=H?null:{x,y};}
+function tileAt(e){const r=cv.getBoundingClientRect();if(!r.width||!r.height)return null;const x=Math.floor(((e.clientX-r.left)/r.width*V.w+cam.x)/TS),y=Math.floor(((e.clientY-r.top)/r.height*V.h+cam.y)/TS);return x<0||y<0||x>=W||y>=H?null:{x,y};}
 const tipEl=$('#tip'),ghost=$('#ghost');
-function showTip(html,x,y){if(!html){hideTip();return;}if(tipEl._h!==html){tipEl.innerHTML=html;tipEl._h=html;}tipEl.style.display='block';
-  const w=tipEl.offsetWidth,h=tipEl.offsetHeight;tipEl.style.left=Math.min(x+16,innerWidth-w-8)+'px';tipEl.style.top=Math.min(y+18,innerHeight-h-8)+'px';}
+function showTip(html,x,y,above){if(!html){hideTip();return;}if(tipEl._h!==html){tipEl.innerHTML=html;tipEl._h=html;}tipEl.style.display='block';
+  const w=tipEl.offsetWidth,h=tipEl.offsetHeight;
+  tipEl.style.left=clamp(above?x-w/2:x+16,8,innerWidth-w-8)+'px';
+  tipEl.style.top=clamp(above?(y-h-36>=8?y-h-36:y+36):y+18,8,innerHeight-h-8)+'px';}
 function hideTip(){tipEl.style.display='none';}
-document.addEventListener('mousemove',e=>{
-  if(drag&&drag.has){if(!drag.moved&&Math.hypot(e.clientX-drag.x,e.clientY-drag.y)>6){drag.moved=true;const m=getM(drag.ref);if(m){ghost.textContent=MOD[m.id].icon;ghost.style.display='block';}hideTip();}
-    if(drag.moved){ghost.style.left=e.clientX-24+'px';ghost.style.top=e.clientY-24+'px';return;}}
-  if(e.target===cv){if(!R||!F){hideTip();return;}hover=tileAt(e);let html='';
-    if(hover&&!modalQ.length){const i=I(hover.x,hover.y),en=F.occ[i],o=F.obj[i];
-      if(en&&F.vis[i]){html=`<b>${en.def.icon} ${en.elite?'菁英・':''}${en.def.name}</b><br>生命 ${Math.ceil(en.hp)} / ${en.maxHp}　攻擊 ${en.atk}${en.armor?'　護甲 '+en.armor:''}<br><small>${en.def.t}</small>`;
-        if(en.poison>=1)html+=`<br><span style="color:#9ccc65">中毒 ${Math.round(en.poison)} 層</span>`;if(en.burnT>0)html+=`<br><span style="color:#ff7043">灼燒 ${en.burnT} 回合</span>`;if(en.frozen>0)html+=`<br><span style="color:#8fd0ff">凍結 ${en.frozen} 回合</span>`;}
-      else if(o&&F.seen[i])html=`<b>${OBJ[o.kind][0]} ${OBJ[o.kind][1]}</b><br><small>${OBJ[o.kind][2]}</small>`;}
-    showTip(html,e.clientX,e.clientY);return;}
+function tileTip(t){if(!t||!R||!F||modalQ.length)return'';const i=I(t.x,t.y),en=F.occ[i],o=F.obj[i];let html='';
+  if(en&&F.vis[i]){html=`<b>${en.def.icon} ${en.elite?'菁英・':''}${en.def.name}</b><br>生命 ${Math.ceil(en.hp)} / ${en.maxHp}　攻擊 ${en.atk}${en.armor?'　護甲 '+en.armor:''}<br><small>${en.def.t}</small>`;
+    if(en.poison>=1)html+=`<br><span style="color:#9ccc65">中毒 ${Math.round(en.poison)} 層</span>`;if(en.burnT>0)html+=`<br><span style="color:#ff7043">灼燒 ${en.burnT} 回合</span>`;if(en.frozen>0)html+=`<br><span style="color:#8fd0ff">凍結 ${en.frozen} 回合</span>`;}
+  else if(o&&F.seen[i])html=`<b>${OBJ[o.kind][0]} ${OBJ[o.kind][1]}</b><br><small>${OBJ[o.kind][2]}</small>`;
+  return html;}
+const elTip=el=>el.dataset.mtip?(R?modTip(el.dataset.mtip):''):el.dataset.tip;
+// touch: long-press shows the tooltip; the click that follows it is swallowed
+let lp=null,lpFired=false;
+function cancelLP(){if(lp){clearTimeout(lp.t);lp=null;}}
+document.addEventListener('pointerdown',e=>{lpFired=false;if(e.pointerType==='mouse')return;hideTip();cancelLP();
+  const x=e.clientX,y=e.clientY,tg=e.target;
+  lp={x,y,id:e.pointerId,t:setTimeout(()=>{lp=null;let html='';
+    if(tg===cv)html=tileTip(tileAt({clientX:x,clientY:y}));else{const el=tg.closest&&tg.closest('[data-tip],[data-mtip]');if(el)html=elTip(el);}
+    if(!html)return;lpFired=true;if(drag)drag.lp=true;showTip(html,x,y,true);},450)};},true);
+document.addEventListener('pointermove',e=>{if(lp&&lp.id===e.pointerId&&Math.hypot(e.clientX-lp.x,e.clientY-lp.y)>10)cancelLP();},true);
+document.addEventListener('pointerup',e=>{if(lp&&lp.id===e.pointerId)cancelLP();},true);
+document.addEventListener('pointercancel',cancelLP,true);
+document.addEventListener('click',e=>{if(lpFired){lpFired=false;e.preventDefault();e.stopPropagation();}},true);
+document.addEventListener('contextmenu',e=>{if(MOB)e.preventDefault();});
+document.addEventListener('pointermove',e=>{
+  if(drag&&drag.has&&drag.id===e.pointerId){if(!drag.moved&&Math.hypot(e.clientX-drag.x,e.clientY-drag.y)>6){drag.moved=true;cancelLP();const m=getM(drag.ref);if(m){ghost.textContent=MOD[m.id].icon;ghost.style.display='block';}hideTip();}
+    if(drag.moved){ghost.style.left=e.clientX-24+'px';ghost.style.top=e.clientY-(e.pointerType==='mouse'?24:72)+'px';return;}}
+  if(e.pointerType!=='mouse')return;
+  if(e.target===cv){hover=tileAt(e);showTip(tileTip(hover),e.clientX,e.clientY);return;}
   hover=null;const el=e.target.closest&&e.target.closest('[data-tip],[data-mtip]');
-  if(el)showTip(el.dataset.mtip?(R?modTip(el.dataset.mtip):''):el.dataset.tip,e.clientX,e.clientY);else hideTip();
+  if(el)showTip(elTip(el),e.clientX,e.clientY);else hideTip();
 });
-cv.addEventListener('mouseleave',()=>{hover=null;hideTip();});
-cv.addEventListener('contextmenu',e=>{e.preventDefault();targeting=false;auto=null;uiDirty=true;});
-cv.addEventListener('mousedown',e=>{
-  if(e.button!==0||busy())return;const t=tileAt(e);if(!t)return;const p=R.p;
+function canvasTap(t){
+  if(drawerOpen){toggleDrawer(false);return;}
+  if(!t||busy())return;const p=R.p;
   if(targeting){doBlink(t.x,t.y);return;}
   const dx=t.x-p.x,dy=t.y-p.y;auto=null;
   if(!dx&&!dy){const o=F.obj[I(p.x,p.y)];if(o&&o.kind==='stairs')descend();else waitTurn();return;}
@@ -1110,16 +1245,35 @@ cv.addEventListener('mousedown',e=>{
   const i=I(t.x,t.y);if(!F.seen[i]||!F.tiles[i])return;
   const path=pathTo(i);if(!path||!path.length)return;
   if(enemyInView()){const n=path[0];tryMove((n%W)-p.x,((n/W)|0)-p.y);}else auto={mode:'path',path,bump:-1};
-});
-$('#side').addEventListener('mousedown',e=>{const el=e.target.closest('[data-slot]');if(!el||!R||R.over)return;const ref=el.dataset.slot;drag={ref,x:e.clientX,y:e.clientY,moved:false,has:ref!=='bin'&&!!getM(ref)};e.preventDefault();});
-window.addEventListener('mouseup',e=>{if(!drag)return;const d=drag;drag=null;ghost.style.display='none';if(!R||R.over)return;
+}
+let cvDown=null;
+cv.addEventListener('pointerdown',e=>{if(e.pointerType==='mouse'){if(e.button===0)canvasTap(tileAt(e));return;}cvDown={x:e.clientX,y:e.clientY,id:e.pointerId};});
+cv.addEventListener('pointerup',e=>{const d=cvDown;cvDown=null;if(e.pointerType==='mouse'||!d||d.id!==e.pointerId||lpFired)return;if(Math.hypot(e.clientX-d.x,e.clientY-d.y)>16)return;canvasTap(tileAt(e));});
+cv.addEventListener('pointercancel',()=>{cvDown=null;});
+cv.addEventListener('pointerleave',e=>{if(e.pointerType==='mouse'){hover=null;hideTip();}});
+cv.addEventListener('contextmenu',e=>{e.preventDefault();targeting=false;auto=null;uiDirty=true;});
+$('#side').addEventListener('pointerdown',e=>{if(e.pointerType==='mouse'&&e.button!==0)return;const el=e.target.closest('[data-slot]');if(!el||!R||R.over)return;const ref=el.dataset.slot;
+  drag={ref,id:e.pointerId,x:e.clientX,y:e.clientY,moved:false,lp:false,has:ref!=='bin'&&!!getM(ref)};e.preventDefault();});
+function endDrag(e,cancel){if(!drag||drag.id!==e.pointerId)return;const d=drag;drag=null;ghost.style.display='none';if(cancel||!R||R.over)return;
   if(d.moved){const t=document.elementFromPoint(e.clientX,e.clientY),el=t&&t.closest('[data-slot]');if(el)doMove(d.ref,el.dataset.slot);sel=null;}
+  else if(d.lp){}
   else if(sel){if(sel!==d.ref)doMove(sel,d.ref);sel=null;}else if(d.has)sel=d.ref;
-  uiDirty=true;});
+  uiDirty=true;}
+window.addEventListener('pointerup',e=>endDrag(e));
+window.addEventListener('pointercancel',e=>endDrag(e,true));
+// on-screen d-pad: hold to keep moving
+let rep=null;
+function stopRep(){if(rep){clearTimeout(rep.t);clearInterval(rep.i);rep=null;}}
+$('#dpad').addEventListener('pointerdown',e=>{const b=e.target.closest('[data-mv]');if(!b||(e.pointerType==='mouse'&&e.button!==0))return;e.preventDefault();stopRep();
+  const [dx,dy]=b.dataset.mv.split(',').map(Number);if(!dx&&!dy){waitTurn();return;}
+  const go=()=>{if(!tryMove(dx,dy))stopRep();};rep={};go();if(rep)rep.t=setTimeout(()=>{if(rep)rep.i=setInterval(go,150);},360);});
+window.addEventListener('pointerup',stopRep);window.addEventListener('pointercancel',stopRep);
 function uiAct(a){if(!R)return;if(a==='help'){if(!modalQ.length)pushModal(helpModal());}else if(a==='mute'){meta.mute=!meta.mute;save();uiDirty=true;}else if(a==='quit'){if(!modalQ.length&&!R.over)pushModal(quitModal());}
+  else if(a==='desc')descend();else if(a==='drawer')toggleDrawer();else if(a==='zoom'){meta.zoom=((meta.zoom||0)+1)%3;save();resizeCv();toast('🔍 地圖縮放：'+['近','中','全圖'][meta.zoom]);}
   else if(a==='potion')usePotion();else if(a==='explore')startExplore();else if(a==='wait')waitTurn();else if(a[0]==='s')useSkill(+a[2]);}
 $('#side').addEventListener('click',e=>{const el=e.target.closest('[data-act]');if(el&&!el.disabled)uiAct(el.dataset.act);});
 $('#top').addEventListener('click',e=>{const el=e.target.closest('[data-act]');if(el)uiAct(el.dataset.act);});
+$('#ctrl').addEventListener('click',e=>{const el=e.target.closest('[data-act]');if(el&&!el.disabled)uiAct(el.dataset.act);});
 $('#modal').addEventListener('click',e=>{const el=e.target.closest('[data-a]'),m=modalQ[0];if(!el||!m||el.disabled)return;if(performance.now()-m.t<300)return;const f=m.acts[+el.dataset.a];if(f)f();});
 $('#hub').addEventListener('click',e=>{const el=e.target.closest('[data-a]');if(!el||el.disabled)return;const f=hubM.acts[+el.dataset.a];if(f)f();});
 let lastKey=0;
@@ -1137,7 +1291,24 @@ window.addEventListener('keydown',e=>{
   else if(k==='1'||k==='2'||k==='3')useSkill(+k-1);else if(k==='h')pushModal(helpModal());else if(k==='escape'){targeting=false;auto=null;sel=null;uiDirty=true;}
 });
 setInterval(()=>{if(auto)autoStep();},42);
-function fit(){const k=Math.min(innerWidth/1900,innerHeight/890),s=$('#stage');s.style.transform=`scale(${k})`;s.style.left=Math.max(0,(innerWidth-1900*k)/2)+'px';s.style.top=Math.max(0,(innerHeight-890*k)/2)+'px';}
+// phone/tablet layout: touch devices or small windows. The map then uses a camera that follows the player.
+function resizeCv(){
+  let ms=1;
+  if(!MOB){if(cv.width!==1440||cv.height!==832){cv.width=1440;cv.height=832;}V={s:1,w:1440,h:832};}
+  else{const wr=$('#mapwrap'),cw=wr.clientWidth,ch=wr.clientHeight;if(!cw||!ch)return;
+    const dpr=Math.min(3,window.devicePixelRatio||1),lv=(meta&&meta.zoom)||0,t=lv===2?Math.min(cw/W,ch/H):Math.min(cw,ch)/[13,19][lv];
+    cv.width=Math.round(cw*dpr);cv.height=Math.round(ch*dpr);const sc=dpr*t/TS;V={s:sc,w:cv.width/sc,h:cv.height/sc};ms=Math.min(2,Math.max(1,Math.round(sc)));}
+  if(ms!==MS){MS=ms;mapCv.width=W*TS*MS;mapCv.height=H*TS*MS;mapDirty=true;}
+}
+function fit(){
+  const m=matchMedia('(pointer:coarse)').matches||innerWidth<900||innerHeight<500,chg=m!==MOB,s=$('#stage');
+  MOB=m;document.body.classList.toggle('mob',m);document.body.classList.toggle('land',m&&innerWidth>innerHeight);
+  if(m){s.style.transform='';s.style.left='';s.style.top='';}
+  else{const k=Math.min(innerWidth/1900,innerHeight/890);s.style.transform=`scale(${k})`;s.style.left=Math.max(0,(innerWidth-1900*k)/2)+'px';s.style.top=Math.max(0,(innerHeight-890*k)/2)+'px';}
+  if(!m&&drawerOpen)toggleDrawer(false);
+  resizeCv();uiDirty=true;
+  if(chg){if(modalQ.length)renderModal();if(!R&&meta)renderHub();}
+}
 window.addEventListener('resize',fit);
 
 // ============================================================ boot
