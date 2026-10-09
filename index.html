@@ -256,13 +256,19 @@ body.mob{font-size:14px}
 .mob .stats{grid-template-columns:repeat(2,1fr)}
 .mob .toast{font-size:14px;padding:7px 14px;max-width:100%}
 .mob #tip{max-width:min(330px,calc(100vw - 16px))}
+#hV{font-size:13px;letter-spacing:1px;color:#aab6d0}
+@keyframes nag{50%{background:#d58a24;border-color:#ffd08a;color:#fff;box-shadow:0 0 16px #ffb54d}}
+#hub .tabs button.flash{animation:nag 1s ease-in-out infinite}
+#hub .go .big button.nag{font-size:16px;padding:8px 20px;background:#4a3010;border-color:#e69a35;color:#ffe9b8;animation:nag 1s ease-in-out infinite}
+.help .ver{color:#ffd08a;font-size:.9em;margin-bottom:4px}
+@media (prefers-reduced-motion:reduce){#hub .tabs button.flash,#hub .go .big button.nag{animation:none;background:#b8741a;color:#fff}}
 </style>
 </head>
 <body>
 <div id="stage">
   <div id="hub">
     <div class="hhead">
-      <div class="logo">深淵拾荒者<span>ABYSS SCAVENGER</span></div>
+      <div class="logo">深淵拾荒者<span>ABYSS SCAVENGER</span><span id="hV"></span></div>
       <div class="cur"><span data-tip="碎晶：探索中獲得，用於工坊的永久強化">💎 <b id="hS">0</b> 碎晶</span><span data-tip="古核：擊敗首領與達成里程碑獲得，用於解鎖核心盤格位與技能">🔶 <b id="hC">0</b> 古核</span></div>
     </div>
     <div class="tabs" id="htabs"></div>
@@ -296,7 +302,7 @@ const W=45,H=26,TS=32;
 const I=(x,y)=>y*W+x;
 const EF='"Segoe UI Emoji","Noto Color Emoji","Apple Color Emoji",sans-serif';
 const KEY='abyss_scavenger_save_v1';
-const VERSION='2026-10-09 11:35';
+const VERSION='2026-10-09 12:04';
 
 // ============================================================ data
 const TAGS={
@@ -949,7 +955,7 @@ function shrineModal(o,i){
     return a.map(c=>{const f=c.act;c.act=()=>{f();delete F.obj[i];mapDirty=true;sfx('mile');};return c;});},
     skip:{label:'暫時離開',act:()=>{}}});
 }
-function helpHTML(){return `<h3>目標</h3>
+function helpHTML(){return `<div class="ver">版本：<b>${VERSION}</b>（台灣時間 UTC+8）</div><h3>目標</h3>
 一層層往下探索，蒐集<b>模組</b>組裝你的<b>核心盤</b>，擊敗第 4、8 層的首領。每次擊敗首領後都可以選擇凱旋而歸（碎晶 +25%），或繼續往下挑戰。<br>
 每場帶回的 💎 碎晶可在基地<b>工坊</b>永久強化；達成<b>里程碑</b>與擊敗首領可獲得 🔶 古核，解鎖更多格位與技能。
 <h3>操作</h3>
@@ -976,8 +982,7 @@ function helpHTML(){return `<h3>目標</h3>
 <h3>小提示</h3>
 ・首領蓄力時地上會出現<b>紅色警示</b>，2 回合後爆發，請走出範圍。<br>
 ・倒下不會失去碎晶；每次回基地都會變得更強。
-<h3>版本與存檔</h3>
-版本：<b>${VERSION}</b>（台灣時間 UTC+8）<br>
+<h3>存檔</h3>
 ・進度會自動儲存在這個瀏覽器的本機儲存空間（localStorage），不會上傳到任何伺服器。<br>
 ・清除瀏覽器的網站資料、使用無痕／私密瀏覽、換瀏覽器或換裝置時，都看不到原本的進度。`;}
 function helpModal(){const m={kind:'help',full:false};m.leave=()=>closeModal();m.html=()=>`<div class="mbox wide"><h2>📖 遊戲說明</h2><div class="help" style="text-align:left">${helpHTML()}</div><div class="mbtns">`+btn(m,'開始探索（Esc）',m.leave,'pri')+'</div></div>';return m;}
@@ -1139,15 +1144,17 @@ function renderSide(){
 // ============================================================ hub
 let hubTab='go';const hubM={acts:[]};let resetArm=false;
 function showHub(){R=null;F=null;modalQ=[];toggleDrawer(false);renderModal();$('#game').classList.add('hidden');$('#hub').classList.remove('hidden');checkMiles();renderHub();}
+const canBuy=u=>{const l=U(u.id);return l<u.max&&(u.cur==='s'?meta.shards:meta.cores)>=u.cost(l);};
+const buyableN=()=>UPG.filter(canBuy).length;
 function buy(u){const l=U(u.id);if(l>=u.max)return false;const c=u.cost(l);if(u.cur==='s'){if(meta.shards<c)return false;meta.shards-=c;}else{if(meta.cores<c)return false;meta.cores-=c;}meta.up[u.id]=l+1;sfx('merge');save();return true;}
 function renderHub(){
-  hubM.acts=[];$('#hS').textContent=fmt(meta.shards);$('#hC').textContent=meta.cores;
+  hubM.acts=[];$('#hS').textContent=fmt(meta.shards);$('#hC').textContent=meta.cores;$('#hV').textContent='版本 '+VERSION;const nb=buyableN();
   const tabs=[['go','⚔️ 出擊'],['shop','🔧 工坊'],['codex',`📘 圖鑑 ${codexCount()}/${CODEX_TOTAL}`],['miles',`🏆 里程碑 ${Object.keys(meta.done).length}/${MILES.length}`],['help','📖 說明']];
-  $('#htabs').innerHTML=tabs.map(([k,n])=>btn(hubM,n,()=>{hubTab=k;resetArm=false;renderHub();},hubTab===k?'on':'')).join('');
+  $('#htabs').innerHTML=tabs.map(([k,n])=>btn(hubM,n,()=>{hubTab=k;resetArm=false;renderHub();},hubTab===k?'on':(k==='shop'&&nb?'flash':''))).join('');
   let h='';
   if(hubTab==='go'){
     const s=st(),sv=meta.saved;
-    h=`<div class="go"><div class="panel big"><div class="hero">🧑‍🚀</div>
+    h=`<div class="go"><div class="panel big">${nb?btn(hubM,`🔧 有 ${nb} 項工坊升級可以購買 → 前往工坊`,()=>{hubTab='shop';resetArm=false;renderHub();},'nag'):''}<div class="hero">🧑‍🚀</div>
       <p>古老的深淵之下埋藏著失落文明的模組與遺物。<br>下潛、蒐集、組裝你的核心盤——每一次歸來，都會讓下一次走得更遠。</p>
       <div class="gobtns">${sv?btn(hubM,`▶ 繼續探索（第 ${sv.depth} 層）`,()=>startRun(true),'pri'):''}${btn(hubM,sv?'重新開始':'▶ 開始探索',()=>startRun(false),sv?'':'pri')}</div>
       <div class="steps"><div><b>① 探索</b>每層地圖隨機生成。打怪、開寶箱、採晶簇，找到 🕳️ 前往下一層。</div><div><b>② 組裝</b>把模組擺上核心盤：同屬性相鄰有連結加成，相同模組可合成升星。</div><div><b>③ 成長</b>帶回 💎 碎晶永久強化，達成里程碑解鎖新格位與技能。</div></div>
