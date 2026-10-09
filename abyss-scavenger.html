@@ -261,6 +261,14 @@ body.mob{font-size:14px}
 #hub .tabs button.flash{animation:nag 1s ease-in-out infinite}
 #hub .go .big button.nag{font-size:16px;padding:8px 20px;background:#4a3010;border-color:#e69a35;color:#ffe9b8;animation:nag 1s ease-in-out infinite}
 .help .ver{color:#ffd08a;font-size:.9em;margin-bottom:4px}
+@keyframes star2{50%{color:#fff;text-shadow:0 0 6px #ffd54f,0 0 14px #ffb300;transform:scale(1.3)}}
+.stars{display:inline-block}
+.slot.fx2 .st,.stars.fx{animation:star2 .6s ease-in-out infinite}
+@keyframes lnk{50%{box-shadow:0 0 0 3px var(--c),0 0 18px var(--c)}}
+.slot.lnk,.card.lnk,.li.lnk{animation:lnk 1.1s ease-in-out infinite}
+.li.lnk{border-color:var(--c)}
+#acts button.ping{animation:nag 1s ease-in-out infinite}
+@media (prefers-reduced-motion:reduce){.slot.fx2 .st,.stars.fx{animation:none;color:#fff;text-shadow:0 0 8px #ffb300}.slot.lnk,.card.lnk,.li.lnk{animation:none;box-shadow:0 0 0 2px var(--c),0 0 12px var(--c)}#acts button.ping{animation:none;background:#b8741a}}
 @media (prefers-reduced-motion:reduce){#hub .tabs button.flash,#hub .go .big button.nag{animation:none;background:#b8741a;color:#fff}}
 </style>
 </head>
@@ -302,7 +310,7 @@ const W=45,H=26,TS=32;
 const I=(x,y)=>y*W+x;
 const EF='"Segoe UI Emoji","Noto Color Emoji","Apple Color Emoji",sans-serif';
 const KEY='abyss_scavenger_save_v1';
-const VERSION='2026-10-09 12:04';
+const VERSION='2026-10-09 12:33';
 
 // ============================================================ data
 const TAGS={
@@ -527,7 +535,7 @@ function setM(ref,m){if(ref[0]==='r')R.rig[+ref.slice(1)]=m;else R.bench[+ref.sl
 function refs(){const a=[];for(const i of SLOT_ORDER.slice(0,slotCount()))a.push('r'+i);for(let i=0;i<R.bench.length;i++)a.push('b'+i);return a;}
 const refOk=ref=>ref==='bin'||refs().includes(ref);
 function addB(k,v){R.p.bonus[k]=(R.p.bonus[k]||0)+v;computeStats();}
-function newRunObj(){return{depth:0,turn:0,elapsed:0,kills:0,gold:0,shards:0,forgeN:0,rerolls:U('reroll'),over:false,
+function newRunObj(){return{depth:0,turn:0,elapsed:0,kills:0,gold:0,shards:0,forgeN:0,rerolls:U('reroll'),over:false,seen2:false,got2:false,
   p:{x:0,y:0,rx:0,ry:0,hp:1,lvl:1,xp:0,potions:1+U('potion'),shield:0,bonus:{},poisonT:0,poisonD:0,cd:[0,0,0],over:0,killHp:0,hpPen:0,lsAcc:0},
   rig:Array(9).fill(null),bench:Array(3+U('bench')).fill(null),relics:[],log:[],newCodex:[],newMiles:[],fx:[],floats:[],tele:[],links:[],bossHit:false,stats:null};}
 function computeStats(){
@@ -633,7 +641,7 @@ function enterFloor(d,resume){
   saveRun();checkMiles();uiDirty=true;mapDirty=true;
 }
 function revealAll(){for(let i=0;i<W*H;i++)if(F.tiles[i]){F.seen[i]=1;const x=i%W,y=(i/W)|0;for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++)F.seen[I(x+dx,y+dy)]=1;}}
-function saveRun(){const p=R.p;meta.saved={depth:R.depth,turn:R.turn,elapsed:R.elapsed,kills:R.kills,gold:R.gold,shards:R.shards,rerolls:R.rerolls,forgeN:R.forgeN,relics:R.relics,rig:R.rig,bench:R.bench,
+function saveRun(){const p=R.p;meta.saved={depth:R.depth,turn:R.turn,elapsed:R.elapsed,kills:R.kills,gold:R.gold,shards:R.shards,rerolls:R.rerolls,forgeN:R.forgeN,seen2:R.seen2,got2:R.got2,relics:R.relics,rig:R.rig,bench:R.bench,
   newCodex:R.newCodex,newMiles:R.newMiles,p:{hp:p.hp,lvl:p.lvl,xp:p.xp,potions:p.potions,bonus:p.bonus,killHp:p.killHp,hpPen:p.hpPen}};save();}
 
 // ============================================================ fov / path
@@ -859,11 +867,15 @@ function rollModules(n){const used={},a=[];for(let i=0;i<n;i++){const m=rollModu
 function canAdd(m){for(const r of refs())if(!getM(r))return true;for(const r of refs()){const o=getM(r);if(o.id===m.id&&o.lv===m.lv&&o.lv<3)return true;}return false;}
 function addModule(m){
   const d=MOD[m.id];discover('mod',m.id,d.name);
-  for(const r of refs())if(!getM(r)){setM(r,{id:m.id,lv:m.lv});log(`獲得模組 ${d.icon} <b>${d.name}</b> ${'★'.repeat(m.lv)}`,'v');afterRig();return true;}
+  for(const r of refs())if(!getM(r)){const nm={id:m.id,lv:m.lv};setM(r,nm);mark2(nm);log(`獲得模組 ${d.icon} <b>${d.name}</b> ${'★'.repeat(m.lv)}`,'v');afterRig();return true;}
   for(const r of refs()){const o=getM(r);if(o.id===m.id&&o.lv===m.lv&&o.lv<3){o.lv++;onMerge(o);afterRig();return true;}}
   return false;
 }
-function onMerge(b){const d=MOD[b.id];if(b.lv===2)st().merge2++;else st().merge3++;sfx('merge');log(`✨ 合成成功：${d.icon} <b>${d.name}</b> 升為 ${'★'.repeat(b.lv)}`,'g');toast(`✨ ${d.icon} ${d.name} → ${'★'.repeat(b.lv)}`);}
+// first ★★ module of the run: its stars flash once the rig is on screen
+function mark2(m){if(m.lv===2&&!R.got2){R.got2=true;m.fx2=true;}}
+const rigTags=()=>{const o={};for(const r of refs())if(r[0]==='r'){const m=getM(r);if(m)o[MOD[m.id].tag]=1;}return o;};
+const starsHTML=(lv,fx)=>`<span class="stars${fx?' fx':''}">${'★'.repeat(lv)}</span>`;
+function onMerge(b){mark2(b);const d=MOD[b.id];if(b.lv===2)st().merge2++;else st().merge3++;sfx('merge');log(`✨ 合成成功：${d.icon} <b>${d.name}</b> 升為 ${'★'.repeat(b.lv)}`,'g');toast(`✨ ${d.icon} ${d.name} → ${'★'.repeat(b.lv)}`);}
 function doMove(from,to){
   if(!R||R.over||from===to||from==='bin'||!refOk(from)||!refOk(to))return;const a=getM(from);if(!a)return;
   if(to==='bin'){const v=[12,35,90][a.lv-1];setM(from,null);addGold(v,true);sfx('pick');log(`拆解 ${MOD[a.id].icon} ${MOD[a.id].name}，獲得 🪙${v}`);}
@@ -887,7 +899,7 @@ function choiceModal(o){
   const m={kind:'choice',opts:o.gen()};
   m.html=()=>{let h=`<div class="mbox"><h2>${o.title}</h2><p class="sub">${o.sub||''}</p><div class="cards">`;
     m.opts.forEach((c,i)=>{const dis=c.dis?c.dis():'';m.acts.push(()=>{if(c.dis&&c.dis())return;closeModal();c.act();afterRig();});
-      h+=`<div class="card ${dis?'dis':''}" data-a="${i}" style="--c:${c.color||'#7f8db0'}"><div class="key">${i+1}</div><div class="ic">${c.icon}</div><div class="nm">${c.name}</div><div class="tg">${c.tag||''}</div><div class="ds">${c.desc}</div>${dis?`<div class="wn">${dis}</div>`:''}</div>`;});
+      h+=`<div class="card ${dis?'dis':''} ${c.cls||''}" data-a="${i}" style="--c:${c.color||'#7f8db0'}"><div class="key">${i+1}</div><div class="ic">${c.icon}</div><div class="nm">${c.name}</div><div class="tg">${c.tag||''}</div><div class="ds">${c.desc}</div>${dis?`<div class="wn">${dis}</div>`:''}</div>`;});
     h+='</div><div class="mbtns">';
     if(o.reroll&&R.rerolls>0)h+=btn(m,`🎲 重擲（剩 ${R.rerolls} 次）`,()=>{R.rerolls--;m.opts=o.gen();renderModal();});
     if(o.skip)h+=btn(m,o.skip.label,()=>{closeModal();o.skip.act();uiDirty=true;});
@@ -896,11 +908,13 @@ function choiceModal(o){
   m.key=k=>{const n=+k;if(n>=1&&n<=m.opts.length){m.acts[n-1]();return true;}};
   pushModal(m);return m;
 }
-function modOpt(mod){const d=MOD[mod.id],t=TAGS[d.tag];let own=0;for(const r of refs()){const o=getM(r);if(o&&o.id===mod.id)own++;}
-  return{icon:d.icon,name:`${d.name} ${'★'.repeat(mod.lv)}`,color:t.color,tag:`${t.icon} ${t.name}`+(own?` ・已持有 ${own}`:'')+(meta.codex.mod[mod.id]?'':' ・NEW'),desc:modDesc(d,mod.lv,1),
+function modOpt(mod,fx2,rt){const d=MOD[mod.id],t=TAGS[d.tag],lk=!!(rt||rigTags())[d.tag];let own=0;for(const r of refs()){const o=getM(r);if(o&&o.id===mod.id)own++;}
+  return{icon:d.icon,name:`${d.name} ${starsHTML(mod.lv,fx2&&mod.lv===2)}`,color:t.color,cls:lk?'lnk':'',tag:`${t.icon} ${t.name}`+(lk?' ・可連動':'')+(own?` ・已持有 ${own}`:'')+(meta.codex.mod[mod.id]?'':' ・NEW'),desc:modDesc(d,mod.lv,1),
     dis:()=>canAdd(mod)?'':'沒有空位——請先把右側的模組拖到「拆解」，或合成相同模組',act:()=>addModule(mod)};}
+// module choices; the first time a ★★ shows up in this run its stars flash
+function modOpts(mods){const fx=!R.seen2&&mods.some(m=>m.lv===2),rt=rigTags();if(fx)R.seen2=true;return mods.map(m=>modOpt(m,fx,rt));}
 function chestModal(){const n=3+(hasRelic('hand')?1:0),g=15+R.depth*5;
-  choiceModal({title:'📦 發現模組',sub:'選擇一個模組裝上核心盤。相同屬性相鄰可獲得連結加成；兩個相同模組可合成升星。',gen:()=>rollModules(n).map(modOpt),reroll:true,skip:{label:`都不要（換 🪙${g}）`,act:()=>{addGold(g,true);}}});}
+  choiceModal({title:'📦 發現模組',sub:'選擇一個模組裝上核心盤。相同屬性相鄰可獲得連結加成；兩個相同模組可合成升星。',gen:()=>modOpts(rollModules(n)),reroll:true,skip:{label:`都不要（換 🪙${g}）`,act:()=>{addGold(g,true);}}});}
 function perkModal(){choiceModal({title:'⬆️ 等級提升',sub:'選擇一項強化（整場生效）',gen:()=>shuffle(PERKS.slice()).slice(0,3).map(p=>({icon:p.icon,name:p.name,desc:p.desc,color:'#5aa0e6',act:p.act})),reroll:true});}
 function relicOpts(n){const pool=shuffle(RELICS.filter(r=>!hasRelic(r.id))).slice(0,n);
   const a=pool.map(r=>({icon:r.icon,name:r.name,desc:r.d,color:'#ffd08a',tag:'遺物'+(meta.codex.relic[r.id]?'':' ・NEW'),act:()=>gainRelic(r.id)}));
@@ -913,6 +927,7 @@ function returnModal(){const m={kind:'return'};const bonus=()=>Math.round(R.shar
 function shopModal(o){
   const d=R.depth;
   if(!o.stock){o.stock=rollModules(3).map(mod=>({type:'mod',mod,price:(mod.lv===1?40:mod.lv===2?110:260)+d*6}));
+    if(!R.seen2&&o.stock.some(it=>it.mod.lv===2)){R.seen2=true;o.stock.forEach(it=>it.fx2=it.mod.lv===2);}
     o.stock.push({type:'potion',price:30+d*4},{type:'heal',price:25+d*5});
     const rl=RELICS.filter(r=>!hasRelic(r.id));if(rl.length&&Math.random()<.45)o.stock.push({type:'relic',id:pick(rl).id,price:150+d*20});}
   const m={kind:'shop',stock:o.stock};m.leave=()=>closeModal();
@@ -921,13 +936,14 @@ function shopModal(o){
     else{R.gold-=it.price;it.sold=true;if(it.type==='potion'){R.p.potions++;it.sold=false;it.price=Math.round(it.price*1.4);}else if(it.type==='heal'){heal(R.stats.maxHp*.5);it.sold=false;it.price=Math.round(it.price*1.5);}else gainRelic(it.id);}
     sfx('pick');uiDirty=true;return true;};
   m.html=()=>{let h=`<div class="mbox"><h2>🧑‍🔧 流浪技師</h2><p class="sub">「看看有什麼需要的？」　持有 🪙 <b>${R.gold}</b></p><div class="list">`;
-    for(const it of o.stock){let ic,nm,ds;
-      if(it.type==='mod'){const md=MOD[it.mod.id],t=TAGS[md.tag];ic=md.icon;nm=`<span style="color:${t.color}">${md.name} ${'★'.repeat(it.mod.lv)}</span> <small style="display:inline">${t.icon}${t.name}</small>`;ds=modDesc(md,it.mod.lv,1);}
+    const rt=rigTags();
+    for(const it of o.stock){let ic,nm,ds,lk=false,col='';
+      if(it.type==='mod'){const md=MOD[it.mod.id],t=TAGS[md.tag];lk=!it.sold&&!!rt[md.tag];col=t.color;ic=md.icon;nm=`<span style="color:${t.color}">${md.name} ${starsHTML(it.mod.lv,it.fx2)}</span> <small style="display:inline">${t.icon}${t.name}${lk?' ・可連動':''}</small>`;ds=modDesc(md,it.mod.lv,1);}
       else if(it.type==='potion'){ic='🧪';nm='藥水';ds='回復 40% 最大生命'+KT('（按 Q 使用）','（點 🧪 使用）');}
       else if(it.type==='heal'){ic='🔧';nm='緊急修理';ds='立即回復 50% 最大生命';}
       else{const r=REL[it.id];ic=r.icon;nm=`<span style="color:#ffd08a">遺物：${r.name}</span>`;ds=r.d;}
       const can=!it.sold&&R.gold>=it.price&&(it.type!=='mod'||canAdd(it.mod))&&!(it.type==='heal'&&R.p.hp>=R.stats.maxHp);
-      h+=`<div class="li ${it.sold?'sold':''}"><span class="ic">${ic}</span><div class="tx"><b>${nm}</b><small>${ds}</small></div>`+btn(m,it.sold?'已售出':`🪙 ${it.price}`,()=>{m.buy(it);renderModal();},'',!can)+'</div>';}
+      h+=`<div class="li ${it.sold?'sold':''} ${lk?'lnk':''}" style="--c:${col||'#3d4c6b'}"><span class="ic">${ic}</span><div class="tx"><b>${nm}</b><small>${ds}</small></div>`+btn(m,it.sold?'已售出':`🪙 ${it.price}`,()=>{m.buy(it);renderModal();},'',!can)+'</div>';}
     return h+'</div><div class="mbtns">'+(MOB?btn(m,'🧩 核心盤',()=>toggleDrawer(true)):'')+btn(m,'離開（Esc）',m.leave)+'</div></div>';};
   return m;
 }
@@ -1093,15 +1109,23 @@ function renderCtrl(){const p=R.p,o=F.obj[I(p.x,p.y)],onSt=!!(o&&o.kind==='stair
   h+=`<button class="sk" data-act="potion" data-tip="喝藥水：回復 ${hasRelic('alch')?60:40}% 最大生命並解毒（消耗一回合）"><span class="e">🧪</span>藥水×${p.potions}</button>
    <button class="sk" data-act="explore" data-tip="自動探索：自動走向未探索區域並拾取物品，看見敵人時停止"><span class="e">🧭</span>自動探索</button>
    <button class="sk ${onSt?'hot':''}" data-act="desc" data-tip="站在 🕳️ 上時前往下一層"><span class="e">⬇️</span>下樓</button>
-   <button class="sk" data-act="drawer" data-tip="打開核心盤、角色數值、遺物與紀錄"><span class="e">🧩</span>核心盤</button>
+   <button class="sk ${rigNews()?'ping':''}" data-act="drawer" data-tip="打開核心盤、角色數值、遺物與紀錄"><span class="e">🧩</span>核心盤</button>
    <button class="sk" data-act="zoom" data-tip="切換地圖縮放：近、中、全圖"><span class="e">🔍</span>縮放</button>`;
   setHTML($('#acts'),h);}
-function toggleDrawer(v){drawerOpen=v===undefined?!drawerOpen:!!v;$('#side').classList.toggle('open',drawerOpen);hideTip();}
-function slotHTML(ref,style,locked){
+const lkKey=()=>Object.keys(linkable()).sort().join();
+function rigNews(){if(!R)return false;const all=[...R.rig,...R.bench];if(all.some(m=>m&&m.fx2===true))return true;const k=lkKey();return !!k&&k!==R.lkSeen;}
+function toggleDrawer(v){drawerOpen=v===undefined?!drawerOpen:!!v;$('#side').classList.toggle('open',drawerOpen);hideTip();if(drawerOpen&&R)R.lkSeen=lkKey();uiDirty=true;}
+// modules that could gain a link: same element exists elsewhere, but this one has no same-element neighbour on the rig
+function linkable(){const by={},out={};for(const r of refs()){const m=getM(r);if(m)(by[MOD[m.id].tag]=by[MOD[m.id].tag]||[]).push(r);}
+  for(const t in by){const a=by[t];if(a.length<2)continue;for(const r of a){if(r[0]==='b'){out[r]=1;continue;}const i=+r.slice(1);if(!NEI[i].some(j=>R.rig[j]&&MOD[R.rig[j].id].tag===t))out[r]=1;}}
+  return out;}
+function slotHTML(ref,style,locked,lk){
   if(locked)return `<div class="slot locked" style="${style}" data-tip="尚未解鎖。回基地後在工坊購買「核心擴充」">🔒</div>`;
   const m=getM(ref);if(!m)return `<div class="slot" style="${style}" data-slot="${ref}"></div>`;
   const d=MOD[m.id],t=TAGS[d.tag];
-  return `<div class="slot mod lv${m.lv} ${sel===ref?'sel':''} ${mergeable(m,ref)?'mg':''}" style="${style};--c:${t.color}" data-slot="${ref}" data-mtip="${ref}"><span class="mi">${d.icon}</span><span class="st">${'★'.repeat(m.lv)}</span></div>`;
+  if(m.fx2===true&&(!MOB||drawerOpen))m.fx2=Date.now()+6000;
+  const fx=m.fx2&&(m.fx2===true||m.fx2>Date.now());
+  return `<div class="slot mod lv${m.lv} ${sel===ref?'sel':''} ${mergeable(m,ref)?'mg':''} ${fx?'fx2':''} ${lk&&lk[ref]?'lnk':''}" style="${style};--c:${t.color}" data-slot="${ref}" data-mtip="${ref}"><span class="mi">${d.icon}</span><span class="st">${'★'.repeat(m.lv)}</span></div>`;
 }
 function modTip(ref){const m=getM(ref);if(!m)return'';const d=MOD[m.id],t=TAGS[d.tag],onRig=ref[0]==='r',mult=onRig?(m.mult||1):1;
   let h=`<b style="color:${t.color}">${d.icon} ${d.name} ${'★'.repeat(m.lv)}</b><br><small>${t.icon} ${t.name}屬性 ・ 共鳴點數 ${LV_PTS[m.lv-1]}</small><br>${modDesc(d,m.lv,mult)}`;
@@ -1109,6 +1133,7 @@ function modTip(ref){const m=getM(ref);if(!m)return'';const d=MOD[m.id],t=TAGS[d
   if(!onRig)h+=`<br><span style="color:#ff8a80">在備用槽中，不會生效</span>`;
   if(m.lv<3)h+=`<br><small>下一星：${modDesc(d,m.lv+1,1).replace(/<\/?b>/g,'')}</small>`;
   if(mergeable(m,ref))h+=`<br><span class="ok">⬆ 可合成：拖到另一個相同的模組上</span>`;
+  if(R&&linkable()[ref])h+=`<br><span class="ok">🔗 可連動：和同屬性模組上下左右相鄰擺放，效果 +15%</span>`;
   return h;}
 function setTip(tag){const t=TAGS[tag],pts=R.stats.pts[tag];let h=`<b style="color:${t.color}">${t.icon} ${t.name}共鳴</b>　目前 ${pts} 點<br><small>★=1 點、★★=2 點、★★★=4 點（僅計算核心盤上的模組）</small>`;
   SETS[tag].forEach((s,i)=>{h+=`<br><span class="${pts>=SET_NEED[i]?'ok':'no'}">${pts>=SET_NEED[i]?'✔':'・'} ${SET_NEED[i]} 點：${s}</span>`;});return h;}
@@ -1121,14 +1146,15 @@ function renderSide(){
    <div class="stats"><div data-tip="每次攻擊的基礎傷害">⚔️攻擊<b>${S.atk}</b></div><div data-tip="每點護甲減少 1 點受到的傷害（最少仍受 25%）">🛡️護甲<b>${S.def}</b></div><div data-tip="暴擊機率">🎯暴擊<b>${fmt(Math.round(S.crit))}%</b></div><div data-tip="暴擊時的傷害倍率">💢暴傷<b>${fmt(Math.round(S.critDmg))}%</b></div>
    <div data-tip="完全閃避攻擊的機率">💨閃避<b>${fmt(Math.round(S.dodge))}%</b></div><div data-tip="依造成的傷害回復生命">🩸吸血<b>${fmt(Math.round(S.lifesteal))}%</b></div><div data-tip="受到近戰攻擊時反彈的傷害">🦔反傷<b>${fmt(Math.round(S.thorns))}</b></div><div data-tip="視野半徑（格）">👁視野<b>${S.vision}</b></div></div></div>`;
   h+=`<div class="box"><h4><span>核心盤　<span style="color:#5d6a8a">拖曳擺放・相同模組疊放可合成</span></span><span>${R.rig.filter(Boolean).length}/${n}</span></h4><div class="rigrow"><div class="rig">`;
-  for(let i=0;i<9;i++){const x=(i%3)*76,y=Math.floor(i/3)*76;h+=slotHTML('r'+i,`left:${x}px;top:${y}px`,SLOT_ORDER.indexOf(i)>=n);}
+  const lk=linkable();
+  for(let i=0;i<9;i++){const x=(i%3)*76,y=Math.floor(i/3)*76;h+=slotHTML('r'+i,`left:${x}px;top:${y}px`,SLOT_ORDER.indexOf(i)>=n,lk);}
   for(const [a,b,tag] of R.links){const x=(a%3)*76,y=Math.floor(a/3)*76,col=TAGS[tag].color;
     h+=b===a+1?`<div class="lk" style="color:${col};left:${x+66}px;top:${y+28}px;width:10px;height:10px"></div>`:`<div class="lk" style="color:${col};left:${x+28}px;top:${y+66}px;width:10px;height:10px"></div>`;}
   h+='</div><div class="sets">';
   for(const tag in TAGS){const t=TAGS[tag],pts=S.pts[tag],tier=S.set[tag];
     h+=`<div class="set ${pts>0?'on':''}" style="--c:${t.color}" data-tip="${esc(setTip(tag))}"><span>${t.icon}</span><span>${t.name}</span><b>${pts}</b><span class="pp">${SET_NEED.map((nd,i)=>`<i class="${tier>i?'a':''}"></i>`).join('')}</span></div>`;}
   h+='</div></div><div class="bench"><span class="lab">備用</span>';
-  for(let i=0;i<R.bench.length;i++)h+=slotHTML('b'+i,'',false);
+  for(let i=0;i<R.bench.length;i++)h+=slotHTML('b'+i,'',false,lk);
   h+=`<div class="bin" data-slot="bin" data-tip="把模組拖到這裡拆解：★ 12、★★ 35、★★★ 90 金幣">♻️<span>拆解</span></div></div></div>`;
   h+=`<div class="box"><h4><span>遺物</span><span>${R.relics.length}</span></h4><div class="relics">${R.relics.length?R.relics.map(id=>`<span data-tip="${esc(`<b style='color:#ffd08a'>${REL[id].icon} ${REL[id].name}</b><br>${REL[id].d}`)}">${REL[id].icon}</span>`).join(''):'<em>擊敗首領、神龕或技師處可取得</em>'}</div></div>`;
   h+='<div class="box skbox"><div class="skills">';
@@ -1189,13 +1215,13 @@ function renderHub(){
 }
 function startRun(resume){
   const sv=meta.saved;R=newRunObj();
-  if(resume&&sv){Object.assign(R,{turn:sv.turn,elapsed:sv.elapsed,kills:sv.kills,gold:sv.gold,shards:sv.shards,rerolls:sv.rerolls,forgeN:sv.forgeN||0,relics:sv.relics,newCodex:sv.newCodex||[],newMiles:sv.newMiles||[]});
+  if(resume&&sv){Object.assign(R,{turn:sv.turn,elapsed:sv.elapsed,kills:sv.kills,gold:sv.gold,shards:sv.shards,rerolls:sv.rerolls,forgeN:sv.forgeN||0,seen2:!!sv.seen2,got2:!!sv.got2,relics:sv.relics,newCodex:sv.newCodex||[],newMiles:sv.newMiles||[]});
     for(let i=0;i<9;i++)R.rig[i]=sv.rig[i]||null;for(let i=0;i<R.bench.length;i++)R.bench[i]=(sv.bench||[])[i]||null;Object.assign(R.p,sv.p);}
   $('#hub').classList.add('hidden');$('#game').classList.remove('hidden');resizeCv();
   computeStats();if(!(resume&&sv))R.p.hp=R.stats.maxHp;
   enterFloor(resume&&sv?sv.depth:1,resume&&sv);
   if(!(resume&&sv)){log(KT('按 <b>F</b> 自動探索，撞擊敵人即可攻擊。按 <b>H</b> 查看說明。','點 <b>🧭</b> 自動探索，用方向鍵撞擊敵人即可攻擊。點 <b>📖</b> 查看說明。'),'b');
-    for(let i=0;i<U('kit');i++)choiceModal({title:'🎁 預載模組',sub:'挑選一個開局模組',gen:()=>rollModules(3).map(modOpt),reroll:true});
+    for(let i=0;i<U('kit');i++)choiceModal({title:'🎁 預載模組',sub:'挑選一個開局模組',gen:()=>modOpts(rollModules(3)),reroll:true});
     if(!meta.seenHelp){meta.seenHelp=true;save();pushModal(helpModal());}}
   uiDirty=true;mapDirty=true;
 }
