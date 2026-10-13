@@ -307,7 +307,7 @@ const W=45,H=26,TS=32;
 const I=(x,y)=>y*W+x;
 const EF='"Segoe UI Emoji","Noto Color Emoji","Apple Color Emoji",sans-serif';
 const KEY='abyss_scavenger_save_v1';
-const VERSION='2026-10-13 13:43';
+const VERSION='2026-10-13 15:59';
 
 // ============================================================ data
 const TAGS={
@@ -659,12 +659,15 @@ const passable=i=>F.tiles[i]===1&&F.seen[i]&&!(F.obj[i]&&BLOCK[F.obj[i].kind]);
 function buildPath(prev,t){const a=[];let c=t;while(prev[c]!==c){a.push(c);c=prev[c];}return a.reverse();}
 function pathTo(t){const p=R.p,s=I(p.x,p.y);if(s===t)return[];const prev=new Int32Array(W*H).fill(-1),q=[s];prev[s]=s;
   for(let h=0;h<q.length;h++){const c=q[h];for(const n of [c-W,c+W,c-1,c+1]){if(prev[n]!==-1)continue;if(n===t){prev[n]=c;return buildPath(prev,n);}if(!passable(n)||(F.occ[n]&&F.vis[n]))continue;prev[n]=c;q.push(n);}}return null;}
-function exploreTarget(){const p=R.p,s=I(p.x,p.y),prev=new Int32Array(W*H).fill(-1),q=[s];prev[s]=s;
+// auto-explore targets, nearest first: unexplored tiles, loose pickups, crystals/chests, and stations not yet visited.
+// Stairs are routed around unless a target can only be reached through them.
+const STATION={forge:1,merchant:1,shrine:1};
+function exploreTarget(viaStairs){const p=R.p,s=I(p.x,p.y),prev=new Int32Array(W*H).fill(-1),q=[s];prev[s]=s;
   for(let h=0;h<q.length;h++){const c=q[h];
     if(c!==s){const o=F.obj[c];if((o&&(o.kind==='gold'||o.kind==='potion'||o.kind==='loot'))||!F.expl[c])return{path:buildPath(prev,c),bump:-1};}
-    for(const n of [c-W,c+W,c-1,c+1]){if(!F.seen[n])return{path:buildPath(prev,c),bump:-1};const o=F.obj[n];if(o&&(o.kind==='crystal'||o.kind==='chest'))return{path:buildPath(prev,c),bump:n};}
-    for(const n of [c-W,c+W,c-1,c+1]){if(prev[n]!==-1||!passable(n)||(F.occ[n]&&F.vis[n]))continue;prev[n]=c;q.push(n);}}
-  return null;}
+    for(const n of [c-W,c+W,c-1,c+1]){if(!F.seen[n])return{path:buildPath(prev,c),bump:-1};const o=F.obj[n];if(o&&(o.kind==='crystal'||o.kind==='chest'||(STATION[o.kind]&&!o.visited)))return{path:buildPath(prev,c),bump:n};}
+    for(const n of [c-W,c+W,c-1,c+1]){if(prev[n]!==-1||!passable(n)||(F.occ[n]&&F.vis[n]))continue;if(!viaStairs&&F.obj[n]&&F.obj[n].kind==='stairs')continue;prev[n]=c;q.push(n);}}
+  return viaStairs?null:exploreTarget(true);}
 function computeDist(){const d=F.dist;d.fill(-1);const p=R.p,q=[I(p.x,p.y)];d[q[0]]=0;
   for(let h=0;h<q.length;h++){const c=q[h];for(const n of [c-W,c+W,c-1,c+1]){if(d[n]>=0||!F.tiles[n]||(F.obj[n]&&BLOCK[F.obj[n].kind]))continue;d[n]=d[c]+1;q.push(n);}}}
 
@@ -809,8 +812,9 @@ function pickup(i){const o=F.obj[i];if(!o)return;
   if(o.kind==='gold'){const g=addGold(o.amt);floatAt(R.p.x,R.p.y,'+'+g+'🪙','#ffd08a');delete F.obj[i];sfx('pick');mapDirty=true;}
   else if(o.kind==='potion'){R.p.potions++;floatAt(R.p.x,R.p.y,'+🧪','#8fe08f');log('拾取了藥水。','v');delete F.obj[i];sfx('pick');mapDirty=true;}
   else if(o.kind==='loot'){delete F.obj[i];mapDirty=true;chestModal();}
-  else if(o.kind==='stairs'){auto=null;log('發現通往下一層的入口——'+KT('按 <b>E</b> 下樓。','點 <b>⬇️ 下樓</b>。'),'b');}}
+  else if(o.kind==='stairs'){if(auto&&(auto.path.length||auto.bump>=0))return;auto=null;log('發現通往下一層的入口——'+KT('按 <b>E</b> 下樓。','點 <b>⬇️ 下樓</b>。'),'b');}}
 function interact(o,i){
+  if(STATION[o.kind])o.visited=true;
   if(o.kind==='crystal'){const s=addShards(o.amt);floatAt(i%W,(i/W)|0,'+'+s+'💎','#b3e5fc');delete F.obj[i];sfx('pick');mapDirty=true;endTurn();}
   else if(o.kind==='chest'){delete F.obj[i];mapDirty=true;st().chests++;sfx('pick');chestModal();}
   else if(o.kind==='forge')pushModal(forgeModal());
@@ -968,7 +972,8 @@ function helpHTML(){return `<div class="ver">版本：<b>${VERSION}</b>（台灣
 <kbd>滑鼠左鍵</kbd> 點地圖：走到該處（視野內有敵人時一次走一步）<br>
 <kbd>F</kbd> 自動探索　<kbd>空白鍵</kbd> 原地等待一回合　<kbd>E</kbd> 下樓<br>
 <kbd>1</kbd> 震盪波　<kbd>2</kbd> 相位閃現　<kbd>3</kbd> 過載　<kbd>Q</kbd> 喝藥水<br>
-選項視窗可按 <kbd>1</kbd>~<kbd>4</kbd> 快速選擇，<kbd>Esc</kbd> 離開商店／取消
+選項視窗可按 <kbd>1</kbd>~<kbd>4</kbd> 快速選擇，<kbd>Esc</kbd> 離開商店／取消<br>
+<b>自動探索</b>（<kbd>F</kbd> 或 🧭）：由近到遠走遍未探索區域、拾取資源，並造訪技師、鍛造台、神龕各一次；途中避開樓梯，全部完成後才走向 🕳️。看見敵人或跳出視窗時停止
 <h3>手機／觸控操作</h3>
 畫面下方<b>方向鍵</b>：移動／撞擊敵人即攻擊（按住可連續移動），中間 ⏳ 原地等待一回合<br>
 <b>點地圖</b>：走到該處；點自己：站在 🕳️ 上時下樓，否則等待一回合<br>
@@ -1103,7 +1108,7 @@ const skTip=i=>{const ok=skillOk(i);return esc(`<b>${SK[i].icon} ${SK[i].name}</
 function renderCtrl(){const p=R.p,o=F.obj[I(p.x,p.y)],onSt=!!(o&&o.kind==='stairs');let h='';
   for(let i=0;i<3;i++){const ok=skillOk(i),cd=p.cd[i];h+=`<button class="sk ${i===1&&targeting?'act':''}" data-act="sk${i}" ${ok?'':'disabled'} data-tip="${skTip(i)}"><span class="e">${ok?SK[i].icon:'🔒'}</span>${SK[i].name}${cd>0?`<span class="cdm">${cd}</span>`:''}</button>`;}
   h+=`<button class="sk" data-act="potion" data-tip="喝藥水：回復 ${hasRelic('alch')?60:40}% 最大生命並解毒（消耗一回合）"><span class="e">🧪</span>藥水×${p.potions}</button>
-   <button class="sk" data-act="explore" data-tip="自動探索：自動走向未探索區域並拾取物品，看見敵人時停止"><span class="e">🧭</span>自動探索</button>
+   <button class="sk" data-act="explore" data-tip="自動探索：自動走向未探索區域、拾取物品並造訪技師、鍛造台與神龕各一次，最後才前往樓梯；看見敵人時停止"><span class="e">🧭</span>自動探索</button>
    <button class="sk ${onSt?'hot':''}" data-act="desc" data-tip="站在 🕳️ 上時前往下一層"><span class="e">⬇️</span>下樓</button>
    <button class="sk" data-act="drawer" data-tip="打開核心盤、角色數值、遺物與紀錄"><span class="e">🧩</span>核心盤</button>
    <button class="sk" data-act="zoom" data-tip="切換地圖縮放：近、中、全圖"><span class="e">🔍</span>縮放</button>`;
@@ -1149,7 +1154,7 @@ function renderSide(){
   for(let i=0;i<3;i++){const ok=skillOk(i),cd=p.cd[i];
     h+=`<button class="sk ${i===1&&targeting?'act':''}" data-act="sk${i}" ${ok?'':'disabled'} data-tip="${skTip(i)}"><kbd>${i+1}</kbd><span class="e">${ok?SK[i].icon:'🔒'}</span>${SK[i].name}${cd>0?`<span class="cdm">${cd}</span>`:''}</button>`;}
   h+=`<button class="sk" data-act="potion" data-tip="喝藥水：回復 ${hasRelic('alch')?60:40}% 最大生命並解毒（消耗一回合）"><kbd>Q</kbd><span class="e">🧪</span>藥水 ×${p.potions}</button>
-   <button class="sk" data-act="explore" data-tip="自動探索：自動走向未探索區域並拾取物品，看見敵人時停止"><kbd>F</kbd><span class="e">🧭</span>自動探索</button>
+   <button class="sk" data-act="explore" data-tip="自動探索：自動走向未探索區域、拾取物品並造訪技師、鍛造台與神龕各一次，最後才前往樓梯；看見敵人時停止"><kbd>F</kbd><span class="e">🧭</span>自動探索</button>
    <button class="sk" data-act="wait" data-tip="原地等待一回合（讓敵人先靠過來）"><kbd>␣</kbd><span class="e">⏳</span>等待</button></div></div>`;
   h+=`<div class="box" id="log">${R.log.join('')}</div>`;
   setHTML($('#side'),h);
