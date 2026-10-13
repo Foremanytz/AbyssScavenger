@@ -260,6 +260,8 @@ body.mob{font-size:14px}
 .mob .toast{font-size:14px;padding:7px 14px;max-width:100%}
 .mob #tip{max-width:min(330px,calc(100vw - 16px))}
 #hV{font-size:13px;letter-spacing:1px;color:#aab6d0}
+#top .tver{font-size:12px;color:#5d6a8a}
+.mob #top .tver{font-size:10px}
 @keyframes nag{50%{background:#d58a24;border-color:#ffd08a;color:#fff;box-shadow:0 0 16px #ffb54d}}
 #hub .tabs button.flash{animation:nag 1s ease-in-out infinite}
 #hub .go .big button.nag{font-size:16px;padding:8px 20px;background:#4a3010;border-color:#e69a35;color:#ffe9b8;animation:nag 1s ease-in-out infinite}
@@ -305,7 +307,7 @@ const W=45,H=26,TS=32;
 const I=(x,y)=>y*W+x;
 const EF='"Segoe UI Emoji","Noto Color Emoji","Apple Color Emoji",sans-serif';
 const KEY='abyss_scavenger_save_v1';
-const VERSION='2026-10-13 13:42';
+const VERSION='2026-10-13 13:43';
 
 // ============================================================ data
 const TAGS={
@@ -1092,7 +1094,7 @@ function renderTop(){
    <span data-tip="已探索的比例。完整探索一層可獲得額外金幣與碎晶">🗺️ <b>${F.boss?'—':Math.floor(F.explN/F.floorN*100)+'%'}</b></span>
    <span>⏱ <b>${mm}:${ss}</b></span><span>☠ <b>${R.kills}</b></span>
    <span data-tip="金幣：本場使用，可在技師與鍛造台消費">🪙 <b>${R.gold}</b></span><span data-tip="碎晶：探索結束後帶回基地，用於永久強化">💎 <b>${R.shards}</b></span>
-   <span class="sp">${g?`🎯 下個里程碑：${g.name}（${g.desc}　${fmt(Math.min(g.val(),g.goal))}/${g.goal}）`:''}</span>`);
+   <span class="sp">${g?`🎯 下個里程碑：${g.name}（${g.desc}　${fmt(Math.min(g.val(),g.goal))}/${g.goal}）`:''}</span><span class="tver">版本 ${VERSION}</span>`);
   setHTML($('#tbtns'),`<button data-act="help">${KT('說明 (H)','📖')}</button><button data-act="mute">${meta.mute?'🔇':'🔊'}</button><button data-act="quit">${KT('結束探索','✕')}</button>`);
 }
 function renderHud(){const p=R.p,S=R.stats,need=xpNeed(p.lvl);
