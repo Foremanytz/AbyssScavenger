@@ -322,8 +322,8 @@ const SETS={
   frost:['每層開始時獲得 25% 最大生命的護盾','受到近戰攻擊時 30% 機率凍結攻擊者','凍結中的敵人受到雙倍傷害','凍結持續時間 +1 回合'],
   volt:['暴擊率 +10%','連鎖閃電額外彈跳 2 次','暴擊必定觸發連鎖閃電，暴擊傷害 +50%','連鎖閃電傷害 60% → 90%'],
   venom:['中毒傷害 +50%','每次擊殺回復 6% 最大生命','中毒不再衰減，吸血 +10%','擊殺時使 2 格內的敵人中毒 3 層'],
-  steel:['護甲 +2','受到的傷害 -20%','最大生命 +30%，反傷 ×3','每回合回復 1% 最大生命'],
-  arcane:['金幣、經驗、碎晶獲取 +15%','技能威力 +100%，冷卻 -20%','每次擊殺永久 +1 最大生命（本場）','進入新樓層時重置所有技能冷卻']
+  steel:['護甲 +2','受到的傷害 -20%','最大生命 +30%，反傷 ×3','最大生命 ×1.2'],
+  arcane:['金幣、經驗、碎晶獲取 +15%','技能威力 +100%，冷卻 -20%','每次擊殺永久 +1 最大生命（本場）','每層都會出現流浪技師']
 };
 const MODULES=[
  {id:'f1',tag:'fire',icon:'🔥',name:'燃燒線圈',st:{burn:[2,5,12]},d:'攻擊使敵人灼燒 3 回合，每回合 {burn} 傷害'},
@@ -476,9 +476,9 @@ M('rk100','百人斬','單場擊殺 100 名敵人',()=>st().runKills,100,0,1);
 M('mg2','初次合成','合成出 ★★ 模組',()=>st().merge2,1,20);
 M('mg3','工匠','合成出 ★★★ 模組',()=>st().merge3,1,0,1);
 M('mg3b','大師工匠','累計合成 10 個 ★★★ 模組',()=>st().merge3,10,0,2);
-M('set3','初鳴','任一屬性共鳴達 3 點',()=>st().maxSet,3,20);
-M('set6','和鳴','任一屬性共鳴達 6 點',()=>st().maxSet,6,0,1);
-M('set10','極致共鳴','任一屬性共鳴達 10 點',()=>st().maxSet,10,0,2);
+M('set3','初鳴','任一屬性共鳴達 6 點',()=>st().maxSet,6,20);
+M('set6','和鳴','任一屬性共鳴達 10 點',()=>st().maxSet,10,0,1);
+M('set10','極致共鳴','任一屬性共鳴達 15 點',()=>st().maxSet,15,0,2);
 M('full','滿載','核心盤 9 格全部裝滿',()=>st().fullRig,1,0,1);
 M('cm10','收藏家 I','圖鑑收錄 10 種模組',()=>Object.keys(meta.codex.mod).length,10,50);
 M('cm20','收藏家 II','圖鑑收錄 20 種模組',()=>Object.keys(meta.codex.mod).length,20,0,1);
@@ -550,7 +550,7 @@ function computeStats(){
   if(hasRelic('boots'))s.dodge+=12;if(hasRelic('sand'))s.cdr+=30;if(hasRelic('belt'))s.hp+=40;
   const cb=codexBonus();
   let hpMul=1+cb/100+U('vital')*.05-p.hpPen*.12;if(set.steel>=3)hpMul+=.3;if(hasRelic('cannon'))hpMul-=.25;
-  s.maxHp=Math.max(10,Math.round((60+U('hp')*5+(p.lvl-1)*5+s.hp+p.killHp)*Math.max(.2,hpMul)));
+  s.maxHp=Math.max(10,Math.round((60+U('hp')*5+(p.lvl-1)*5+s.hp+p.killHp)*Math.max(.2,hpMul)*(set.steel>=4?1.2:1)));
   s.atk=Math.max(1,Math.round((6+U('atk')+(p.lvl-1)+s.atk+s.maxHp*s.hpToAtk/100)*(1+s.atkPct/100)));
   s.dmgMult=(1+cb/100+U('bless')*.05)*(set.fire>=3?1.5:1)*(hasRelic('cannon')?1.4:1);
   s.def=Math.floor(s.def+U('def'));s.crit=Math.min(100,5+U('crit')*2+s.crit);s.critDmg=150+s.critDmg;
@@ -614,7 +614,7 @@ function genFloor(d){
     for(let k=rr(3,5);k>0;k--)putW('gold',{amt:rr(5,10)+d});
     if(Math.random()<.45)putW('potion');
     if(d===2||Math.random()<.45)putB('forge');
-    if(d%4===3||Math.random()<.35)putB('merchant');
+    if(d%4===3||(R&&R.stats&&R.stats.set.arcane>=4)||Math.random()<.35)putB('merchant');
     if(Math.random()<.4)putB('shrine',{used:false});
     const tbl=spawnTable(d),n=Math.min(19,7+d),elites=d>=6?2:d>=3?1:0;let eyes=0;
     for(let k=0;k<n;k++){for(let t=0;t<40;t++){const r=pick(others),x=rr(r.x,r.x+r.w-1),y=rr(r.y,r.y+r.h-1),i=I(x,y);
@@ -629,7 +629,6 @@ function enterFloor(d,resume){
   R.tele=[];R.fx=[];R.floats=[];R.bossHit=false;auto=null;targeting=false;
   computeStats();p.shield=R.stats.set.frost>=1?Math.round(R.stats.maxHp*.25):0;
   if(!resume&&d>1&&hasRelic('alch'))p.potions++;
-  if(!resume&&R.stats.set.arcane>=4)p.cd=[0,0,0];
   if(hasRelic('scope')||F.boss)revealAll();
   computeFov();
   log(F.boss?`<b>第 ${d} 層 — 首領的巢穴。</b>留意地上的紅色警示！`:`進入<b>第 ${d} 層 · ${F.theme.name}</b>`,'g');
@@ -785,7 +784,7 @@ function endTurn(extra){
   const p=R.p,S=R.stats;R.turn++;
   for(let i=0;i<3;i++)if(p.cd[i]>0)p.cd[i]--;
   if(p.over>0)p.over--;
-  if(S.regen)heal(S.regen);if(S.set.steel>=4)heal(S.maxHp*.01);
+  if(S.regen)heal(S.regen);
   if(p.poisonT>0){p.poisonT--;p.hp-=p.poisonD;floatAt(p.x,p.y,'-'+p.poisonD,'#9ccc65');if(p.hp<=0&&!revive()){die();return;}}
   if(S.aura>0)for(const e of F.enemies.slice())if(!e.dead&&cheb(e,p)<=1)dealDamage(e,S.aura,{color:'#ffe98a'});
   if(extra)floatAt(p.x,p.y,'再行動！','#ffd54f');else{tickTele();if(!R.over){computeFov();enemiesAct();}}
