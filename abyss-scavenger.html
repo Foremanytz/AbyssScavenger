@@ -242,6 +242,9 @@ body.mob{font-size:14px}
 .mob #log{max-height:180px;overflow-y:auto}
 .mob .bench{flex-wrap:wrap}
 .mob .slot,.mob .bin{touch-action:none}
+.mdet{display:none}
+.mob .mdet{display:block;margin-top:10px;min-height:64px;background:#0d111b;border:1px solid #26304a;border-radius:8px;padding:8px 10px;font-size:14px;line-height:1.6}
+.mob .mdet small{color:#8f9cbc}.mob .mdet .ok{color:#8fe08f}
 .mob #modal.ing{left:0;top:0;width:100%;height:100%}
 .mob .mbox,.mob .mbox.wide,.mob .mbox.sumbox{min-width:0;width:calc(100% - 16px);max-width:760px;max-height:calc(100% - 16px);padding:16px 12px}
 .mob .mbox h2{font-size:20px}.mob .mbox .sub{font-size:13px;margin-bottom:10px}
@@ -302,7 +305,7 @@ const W=45,H=26,TS=32;
 const I=(x,y)=>y*W+x;
 const EF='"Segoe UI Emoji","Noto Color Emoji","Apple Color Emoji",sans-serif';
 const KEY='abyss_scavenger_save_v1';
-const VERSION='2026-10-09 12:04';
+const VERSION='2026-10-13 10:00';
 
 // ============================================================ data
 const TAGS={
@@ -968,7 +971,7 @@ function helpHTML(){return `<div class="ver">版本：<b>${VERSION}</b>（台灣
 畫面下方<b>方向鍵</b>：移動／撞擊敵人即攻擊（按住可連續移動），中間 ⏳ 原地等待一回合<br>
 <b>點地圖</b>：走到該處；點自己：站在 🕳️ 上時下樓，否則等待一回合<br>
 操作列：💥 震盪波　🌀 相位閃現　🔆 過載　🧪 藥水　🧭 自動探索　⬇️ 下樓　🧩 打開核心盤　🔍 切換地圖縮放<br>
-<b>長按</b>敵人、物件、模組或按鈕可查看說明
+<b>長按</b>敵人、物件、模組或按鈕可查看說明；打開核心盤後點一下模組，下方會顯示它的詳細資訊
 <h3>核心盤（組裝）</h3>
 用滑鼠或手指<b>拖曳</b>核心盤上的模組來擺放（也可以先點一下再點目的地）。手機請點 🧩 打開核心盤。<br>
 ・<b>連結</b>：上下左右相鄰的同屬性模組，每條連結使雙方效果 +15%。<br>
@@ -1004,7 +1007,14 @@ function endRun(kind){
 
 // ============================================================ rendering (canvas)
 const cv=$('#cv'),ctx=cv.getContext('2d'),mapCv=document.createElement('canvas');mapCv.width=W*TS;mapCv.height=H*TS;const mctx=mapCv.getContext('2d');
-function emo(c,ch,x,y,size){c.font=`${size}px ${EF}`;c.textAlign='center';c.textBaseline='middle';c.fillText(ch,x,y+size*.06);}
+// emoji fonts place glyphs differently (Segoe vs Apple Color Emoji), so measure each glyph's ink box once and center on it
+const EMO_OFF={};
+function emoOff(ch){let o=EMO_OFF[ch];if(o)return o;const S=64,P=S*2,oc=document.createElement('canvas');oc.width=oc.height=P;const x=oc.getContext('2d',{willReadFrequently:true});
+  x.font=`${S}px ${EF}`;x.textAlign='center';x.textBaseline='middle';x.fillStyle='#fff';x.fillText(ch,P/2,P/2);
+  let d=null;try{d=x.getImageData(0,0,P,P).data;}catch(e){}let x0=P,y0=P,x1=-1,y1=-1;
+  if(d)for(let y=0;y<P;y++)for(let i=0;i<P;i++)if(d[(y*P+i)*4+3]>16){if(i<x0)x0=i;if(i>x1)x1=i;if(y<y0)y0=y;if(y>y1)y1=y;}
+  o=x1<0?[0,.06]:[(P-x0-x1-1)/2/S,(P-y0-y1-1)/2/S];return EMO_OFF[ch]=o;}
+function emo(c,ch,x,y,size){const o=emoOff(ch);c.font=`${size}px ${EF}`;c.textAlign='center';c.textBaseline='middle';c.fillText(ch,x+o[0]*size,y+o[1]*size);}
 function drawMap(){
   const c=mctx,th=F.theme;c.setTransform(MS,0,0,MS,0,0);c.fillStyle='#06070b';c.fillRect(0,0,W*TS,H*TS);
   for(let y=0;y<H;y++)for(let x=0;x<W;x++){const i=I(x,y);if(!F.seen[i])continue;const px=x*TS,py=y*TS;
@@ -1129,7 +1139,9 @@ function renderSide(){
     h+=`<div class="set ${pts>0?'on':''}" style="--c:${t.color}" data-tip="${esc(setTip(tag))}"><span>${t.icon}</span><span>${t.name}</span><b>${pts}</b><span class="pp">${SET_NEED.map((nd,i)=>`<i class="${tier>i?'a':''}"></i>`).join('')}</span></div>`;}
   h+='</div></div><div class="bench"><span class="lab">備用</span>';
   for(let i=0;i<R.bench.length;i++)h+=slotHTML('b'+i,'',false);
-  h+=`<div class="bin" data-slot="bin" data-tip="把模組拖到這裡拆解：★ 12、★★ 35、★★★ 90 金幣">♻️<span>拆解</span></div></div></div>`;
+  h+=`<div class="bin" data-slot="bin" data-tip="把模組拖到這裡拆解：★ 12、★★ 35、★★★ 90 金幣">♻️<span>拆解</span></div></div>`;
+  const dt=sel&&modTip(sel);
+  h+=`<div class="mdet">${dt||'<small>點一下模組查看詳細資訊；選取後再點另一格可搬移，點相同模組可合成，再點一次取消選取</small>'}</div></div>`;
   h+=`<div class="box"><h4><span>遺物</span><span>${R.relics.length}</span></h4><div class="relics">${R.relics.length?R.relics.map(id=>`<span data-tip="${esc(`<b style='color:#ffd08a'>${REL[id].icon} ${REL[id].name}</b><br>${REL[id].d}`)}">${REL[id].icon}</span>`).join(''):'<em>擊敗首領、神龕或技師處可取得</em>'}</div></div>`;
   h+='<div class="box skbox"><div class="skills">';
   for(let i=0;i<3;i++){const ok=skillOk(i),cd=p.cd[i];
@@ -1227,6 +1239,9 @@ document.addEventListener('pointerup',e=>{if(lp&&lp.id===e.pointerId)cancelLP();
 document.addEventListener('pointercancel',cancelLP,true);
 document.addEventListener('click',e=>{if(lpFired){lpFired=false;e.preventDefault();e.stopPropagation();}},true);
 document.addEventListener('contextmenu',e=>{if(MOB)e.preventDefault();});
+// iOS: a held touch can be claimed by the system (callout / haptic touch) and sends pointercancel, killing the long-press.
+// Blocking the touch default is safe only where input is handled by pointer events, not click: the map and module slots.
+document.addEventListener('touchstart',e=>{const t=e.target;if(t===cv||(t.closest&&t.closest('#side [data-slot]')))e.preventDefault();},{passive:false});
 document.addEventListener('pointermove',e=>{
   if(drag&&drag.has&&drag.id===e.pointerId){if(!drag.moved&&Math.hypot(e.clientX-drag.x,e.clientY-drag.y)>6){drag.moved=true;cancelLP();const m=getM(drag.ref);if(m){ghost.textContent=MOD[m.id].icon;ghost.style.display='block';}hideTip();}
     if(drag.moved){ghost.style.left=e.clientX-24+'px';ghost.style.top=e.clientY-(e.pointerType==='mouse'?24:72)+'px';return;}}
