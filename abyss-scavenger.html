@@ -242,6 +242,9 @@ body.mob{font-size:14px}
 .mob #log{max-height:180px;overflow-y:auto}
 .mob .bench{flex-wrap:wrap}
 .mob .slot,.mob .bin{touch-action:none}
+.mdet{display:none}
+.mob .mdet{display:block;margin-top:10px;min-height:64px;background:#0d111b;border:1px solid #26304a;border-radius:8px;padding:8px 10px;font-size:14px;line-height:1.6}
+.mob .mdet small{color:#8f9cbc}.mob .mdet .ok{color:#8fe08f}
 .mob #modal.ing{left:0;top:0;width:100%;height:100%}
 .mob .mbox,.mob .mbox.wide,.mob .mbox.sumbox{min-width:0;width:calc(100% - 16px);max-width:760px;max-height:calc(100% - 16px);padding:16px 12px}
 .mob .mbox h2{font-size:20px}.mob .mbox .sub{font-size:13px;margin-bottom:10px}
@@ -257,6 +260,8 @@ body.mob{font-size:14px}
 .mob .toast{font-size:14px;padding:7px 14px;max-width:100%}
 .mob #tip{max-width:min(330px,calc(100vw - 16px))}
 #hV{font-size:13px;letter-spacing:1px;color:#aab6d0}
+#top .tver{font-size:12px;color:#5d6a8a}
+.mob #top .tver{font-size:10px}
 @keyframes nag{50%{background:#d58a24;border-color:#ffd08a;color:#fff;box-shadow:0 0 16px #ffb54d}}
 #hub .tabs button.flash{animation:nag 1s ease-in-out infinite}
 #hub .go .big button.nag{font-size:16px;padding:8px 20px;background:#4a3010;border-color:#e69a35;color:#ffe9b8;animation:nag 1s ease-in-out infinite}
@@ -302,7 +307,7 @@ const W=45,H=26,TS=32;
 const I=(x,y)=>y*W+x;
 const EF='"Segoe UI Emoji","Noto Color Emoji","Apple Color Emoji",sans-serif';
 const KEY='abyss_scavenger_save_v1';
-const VERSION='2026-10-09 12:04';
+const VERSION='2026-10-13 13:43';
 
 // ============================================================ data
 const TAGS={
@@ -313,14 +318,14 @@ const TAGS={
   steel:{name:'鋼鐵',color:'#b0bec5',icon:'🛡️'},
   arcane:{name:'秘法',color:'#ba68c8',icon:'✨'}
 };
-const SET_NEED=[3,6,10],LV_PTS=[1,2,4];
+const SET_NEED=[3,6,10,15],LV_PTS=[1,2,4];
 const SETS={
-  fire:['灼燒傷害 +50%','擊殺時爆炸：對周圍敵人造成 100% 攻擊的傷害','所有傷害 +50%'],
-  frost:['每層開始時獲得 25% 最大生命的護盾','受到近戰攻擊時 30% 機率凍結攻擊者','凍結中的敵人受到雙倍傷害'],
-  volt:['暴擊率 +10%','連鎖閃電額外彈跳 2 次','暴擊必定觸發連鎖閃電，暴擊傷害 +50%'],
-  venom:['中毒傷害 +50%','每次擊殺回復 6% 最大生命','中毒不再衰減，吸血 +10%'],
-  steel:['護甲 +2','受到的傷害 -20%','最大生命 +30%，反傷 ×3'],
-  arcane:['金幣、經驗、碎晶獲取 +15%','技能威力 +100%，冷卻 -20%','每次擊殺永久 +1 最大生命（本場）']
+  fire:['灼燒傷害 +50%','擊殺時爆炸：對周圍敵人造成 100% 攻擊的傷害','所有傷害 +50%','灼燒持續 5 回合（原 3 回合）'],
+  frost:['每層開始時獲得 25% 最大生命的護盾','受到近戰攻擊時 30% 機率凍結攻擊者','凍結中的敵人受到雙倍傷害','凍結持續時間 +1 回合'],
+  volt:['暴擊率 +10%','連鎖閃電額外彈跳 2 次','暴擊必定觸發連鎖閃電，暴擊傷害 +50%','連鎖閃電傷害 60% → 90%'],
+  venom:['中毒傷害 +50%','每次擊殺回復 6% 最大生命','中毒不再衰減，吸血 +10%','擊殺時使 2 格內的敵人中毒 3 層'],
+  steel:['護甲 +2','受到的傷害 -20%','最大生命 +30%，反傷 ×3','最大生命 ×1.2'],
+  arcane:['金幣、經驗、碎晶獲取 +15%','技能威力 +100%，冷卻 -20%','每次擊殺永久 +1 最大生命（本場）','每層都會出現流浪技師']
 };
 const MODULES=[
  {id:'f1',tag:'fire',icon:'🔥',name:'燃燒線圈',st:{burn:[2,5,12]},d:'攻擊使敵人灼燒 3 回合，每回合 {burn} 傷害'},
@@ -430,15 +435,15 @@ const UPG=[
 const PERKS=[
  {icon:'❤️',name:'強韌',desc:'最大生命 +18，並回復 18 生命',act:()=>{addB('hp',18);computeStats();heal(18);}},
  {icon:'⚔️',name:'銳利',desc:'攻擊 +2',act:()=>addB('atk',2)},
- {icon:'🛡️',name:'硬化',desc:'護甲 +1',act:()=>addB('def',1)},
- {icon:'🎯',name:'精準',desc:'暴擊率 +6%',act:()=>addB('crit',6)},
+ {icon:'🪨',name:'硬化',desc:'護甲 +1',act:()=>addB('def',1)},
+ {icon:'📐',name:'精準',desc:'暴擊率 +6%',act:()=>addB('crit',6)},
  {icon:'💢',name:'致命',desc:'暴擊傷害 +30%',act:()=>addB('critDmg',30)},
  {icon:'💨',name:'靈巧',desc:'閃避 +5%',act:()=>addB('dodge',5)},
- {icon:'🩸',name:'汲取',desc:'吸血 +4%',act:()=>addB('lifesteal',4)},
- {icon:'🧪',name:'補給',desc:'回復 50% 生命，並獲得 1 瓶藥水',act:()=>{heal(R.stats.maxHp*.5);R.p.potions++;}},
+ {icon:'💉',name:'汲取',desc:'吸血 +4%',act:()=>addB('lifesteal',4)},
+ {icon:'🍖',name:'補給',desc:'回復 50% 生命，並獲得 1 瓶藥水',act:()=>{heal(R.stats.maxHp*.5);R.p.potions++;}},
  {icon:'🪙',name:'橫財',desc:'立即獲得一筆金幣（隨層數增加）',act:()=>addGold(40+R.depth*12)},
  {icon:'🌠',name:'專注',desc:'技能威力 +40%，技能冷卻 -6%',act:()=>{addB('skillPct',40);addB('cdr',6);}},
- {icon:'🦔',name:'棘刺',desc:'反傷 +3',act:()=>addB('thorns',3)}
+ {icon:'🌵',name:'棘刺',desc:'反傷 +3',act:()=>addB('thorns',3)}
 ];
 const STAT_NAME={atk:'攻擊',def:'護甲',crit:'暴擊率%',critDmg:'暴擊傷害%',dodge:'閃避%',block:'格擋%',lifesteal:'吸血%',regen:'每回合回復',thorns:'反傷',burn:'灼燒',poison:'中毒層數/擊',freeze:'凍結機率%',chain:'連鎖機率%',splash:'濺射%',extraTurn:'再行動機率%',aura:'力場傷害',vuln:'腐蝕增傷%',spore:'孢子層數',execute:'斬殺增傷%',firstStrike:'首擊增傷%',skillPct:'技能威力+%',cdr:'冷卻縮減%',weaken:'敵傷減免%',gold:'金幣+%',xp:'經驗+%',shard:'碎晶+%',vision:'視野'};
 
@@ -473,9 +478,9 @@ M('rk100','百人斬','單場擊殺 100 名敵人',()=>st().runKills,100,0,1);
 M('mg2','初次合成','合成出 ★★ 模組',()=>st().merge2,1,20);
 M('mg3','工匠','合成出 ★★★ 模組',()=>st().merge3,1,0,1);
 M('mg3b','大師工匠','累計合成 10 個 ★★★ 模組',()=>st().merge3,10,0,2);
-M('set3','初鳴','任一屬性共鳴達 3 點',()=>st().maxSet,3,20);
-M('set6','和鳴','任一屬性共鳴達 6 點',()=>st().maxSet,6,0,1);
-M('set10','極致共鳴','任一屬性共鳴達 10 點',()=>st().maxSet,10,0,2);
+M('set3','初鳴','任一屬性共鳴達 6 點',()=>st().maxSet,6,20);
+M('set6','和鳴','任一屬性共鳴達 10 點',()=>st().maxSet,10,0,1);
+M('set10','極致共鳴','任一屬性共鳴達 15 點',()=>st().maxSet,15,0,2);
 M('full','滿載','核心盤 9 格全部裝滿',()=>st().fullRig,1,0,1);
 M('cm10','收藏家 I','圖鑑收錄 10 種模組',()=>Object.keys(meta.codex.mod).length,10,50);
 M('cm20','收藏家 II','圖鑑收錄 20 種模組',()=>Object.keys(meta.codex.mod).length,20,0,1);
@@ -539,7 +544,7 @@ function computeStats(){
     for(const j of NEI[i]){const o=R.rig[j];if(o&&MOD[o.id].tag===d.tag){lk++;if(j>i)R.links.push([i,j,d.tag]);}}
     m.mult=1+lk*linkB;for(const k in d.st)s[k]+=d.st[k][m.lv-1]*m.mult;pts[d.tag]+=LV_PTS[m.lv-1];}
   if(hasRelic('reso'))for(const t in pts)if(pts[t]>0)pts[t]++;
-  const set={};let mx=0;for(const t in pts){set[t]=pts[t]>=10?3:pts[t]>=6?2:pts[t]>=3?1:0;mx=Math.max(mx,pts[t]);}
+  const set={};let mx=0;for(const t in pts){set[t]=SET_NEED.filter(n=>pts[t]>=n).length;mx=Math.max(mx,pts[t]);}
   for(const k in b)s[k]=(s[k]||0)+b[k];
   if(set.volt>=1)s.crit+=10;if(set.volt>=3)s.critDmg+=50;if(set.venom>=3)s.lifesteal+=10;if(set.steel>=1)s.def+=2;
   if(set.arcane>=1){s.gold+=15;s.xp+=15;s.shard+=15;}if(set.arcane>=2){s.skillPct+=100;s.cdr+=20;}
@@ -547,7 +552,7 @@ function computeStats(){
   if(hasRelic('boots'))s.dodge+=12;if(hasRelic('sand'))s.cdr+=30;if(hasRelic('belt'))s.hp+=40;
   const cb=codexBonus();
   let hpMul=1+cb/100+U('vital')*.05-p.hpPen*.12;if(set.steel>=3)hpMul+=.3;if(hasRelic('cannon'))hpMul-=.25;
-  s.maxHp=Math.max(10,Math.round((60+U('hp')*5+(p.lvl-1)*5+s.hp+p.killHp)*Math.max(.2,hpMul)));
+  s.maxHp=Math.max(10,Math.round((60+U('hp')*5+(p.lvl-1)*5+s.hp+p.killHp)*Math.max(.2,hpMul)*(set.steel>=4?1.2:1)));
   s.atk=Math.max(1,Math.round((6+U('atk')+(p.lvl-1)+s.atk+s.maxHp*s.hpToAtk/100)*(1+s.atkPct/100)));
   s.dmgMult=(1+cb/100+U('bless')*.05)*(set.fire>=3?1.5:1)*(hasRelic('cannon')?1.4:1);
   s.def=Math.floor(s.def+U('def'));s.crit=Math.min(100,5+U('crit')*2+s.crit);s.critDmg=150+s.critDmg;
@@ -611,7 +616,7 @@ function genFloor(d){
     for(let k=rr(3,5);k>0;k--)putW('gold',{amt:rr(5,10)+d});
     if(Math.random()<.45)putW('potion');
     if(d===2||Math.random()<.45)putB('forge');
-    if(d%4===3||Math.random()<.35)putB('merchant');
+    if(d%4===3||(R&&R.stats&&R.stats.set.arcane>=4)||Math.random()<.35)putB('merchant');
     if(Math.random()<.4)putB('shrine',{used:false});
     const tbl=spawnTable(d),n=Math.min(19,7+d),elites=d>=6?2:d>=3?1:0;let eyes=0;
     for(let k=0;k<n;k++){for(let t=0;t<40;t++){const r=pick(others),x=rr(r.x,r.x+r.w-1),y=rr(r.y,r.y+r.h-1),i=I(x,y);
@@ -670,7 +675,7 @@ function fxRing(x,y,r,color){R.fx.push({k:'ring',x,y,r,color,t:0});}
 function fxCells(cells,color){R.fx.push({k:'cells',cells,color,t:0});}
 
 // ============================================================ combat
-function applyFreeze(e,turns){if(e.boss){if(e.frzImm>0)return;e.frzImm=5;turns=1;}e.frozen=Math.max(e.frozen,turns);floatAt(e.x,e.y,'凍結','#8fd0ff');}
+function applyFreeze(e,turns){if(R.stats.set.frost>=4)turns++;if(e.boss){if(e.frzImm>0)return;e.frzImm=5;turns=1;}e.frozen=Math.max(e.frozen,turns);floatAt(e.x,e.y,'凍結','#8fd0ff');}
 function dealDamage(e,dmg,o){
   if(e.dead)return 0;o=o||{};const S=R.stats,p=R.p;
   if(!o.raw){dmg*=S.dmgMult;if(p.over>0)dmg*=2;if(e.vuln)dmg*=1+e.vuln/100;if(e.frozen>0&&S.set.frost>=3)dmg*=2;
@@ -692,9 +697,9 @@ function playerAttack(e){
   if(S.execute&&e.hp<e.maxHp*.3)dmg*=1+S.execute/100;
   const dealt=dealDamage(e,dmg,{crit});sfx(crit?'crit':'hit');
   if(S.lifesteal)heal(dealt*S.lifesteal/100);
-  if(!e.dead){if(S.burn){e.burn=Math.max(e.burn,S.burn);e.burnT=3;}if(S.poison)e.poison+=S.poison;if(S.vuln)e.vuln=S.vuln;if(S.freeze&&Math.random()*100<S.freeze)applyFreeze(e,2);}
+  if(!e.dead){if(S.burn){e.burn=Math.max(e.burn,S.burn);e.burnT=S.set.fire>=4?5:3;}if(S.poison)e.poison+=S.poison;if(S.vuln)e.vuln=S.vuln;if(S.freeze&&Math.random()*100<S.freeze)applyFreeze(e,2);}
   if(S.splash){let any=false;for(const o of F.enemies.slice())if(o!==e&&!o.dead&&cheb(o,e)<=1){dealDamage(o,dealt*S.splash/100,{raw:true,color:'#ffab91'});any=true;}if(any)fxRing(e.x,e.y,1.4,'#ff7043');}
-  if(S.chain&&(Math.random()*100<S.chain||(crit&&S.set.volt>=3)))chainFrom(e,dealt*.6,1+(S.set.volt>=2?2:0));
+  if(S.chain&&(Math.random()*100<S.chain||(crit&&S.set.volt>=3)))chainFrom(e,dealt*(S.set.volt>=4?.9:.6),1+(S.set.volt>=2?2:0));
   return Math.random()*100<S.extraTurn;
 }
 function freeNeighbor(x,y){const c=shuffle([[1,0],[-1,0],[0,1],[0,-1],[1,1],[-1,-1],[1,-1],[-1,1]]);
@@ -710,7 +715,7 @@ function killEnemy(e,noReward){
   if(hasRelic('fang'))heal(3);if(S.set.venom>=2)heal(S.maxHp*.06);
   if(S.set.arcane>=3){p.killHp++;computeStats();}
   if(S.set.fire>=2){fxRing(e.x,e.y,1.5,'#ff7043');for(const o of F.enemies.slice())if(!o.dead&&cheb(o,e)<=1)dealDamage(o,S.atk,{color:'#ffab91'});}
-  if(S.spore)for(const o of F.enemies)if(!o.dead&&cheb(o,e)<=2){o.poison+=S.spore;o.awake=true;}
+  const spore=S.spore+(S.set.venom>=4?3:0);if(spore)for(const o of F.enemies)if(!o.dead&&cheb(o,e)<=2){o.poison+=spore;o.awake=true;}
   if(e.def.split)for(let n=0;n<2;n++){const t=freeNeighbor(e.x,e.y);if(t)mkEnemy(F,'mini',t.x,t.y,false,true);}
   if(e.elite){log(`擊敗菁英 <b>${e.def.name}</b>！掉落戰利品。`,'g');if(!F.obj[i]){F.obj[i]={kind:'loot'};mapDirty=true;}else chestModal();}
   if(e.boss)bossDead(e);
@@ -968,12 +973,12 @@ function helpHTML(){return `<div class="ver">版本：<b>${VERSION}</b>（台灣
 畫面下方<b>方向鍵</b>：移動／撞擊敵人即攻擊（按住可連續移動），中間 ⏳ 原地等待一回合<br>
 <b>點地圖</b>：走到該處；點自己：站在 🕳️ 上時下樓，否則等待一回合<br>
 操作列：💥 震盪波　🌀 相位閃現　🔆 過載　🧪 藥水　🧭 自動探索　⬇️ 下樓　🧩 打開核心盤　🔍 切換地圖縮放<br>
-<b>長按</b>敵人、物件、模組或按鈕可查看說明
+<b>長按</b>敵人、物件、模組或按鈕可查看說明；打開核心盤後點一下模組，下方會顯示它的詳細資訊
 <h3>核心盤（組裝）</h3>
 用滑鼠或手指<b>拖曳</b>核心盤上的模組來擺放（也可以先點一下再點目的地）。手機請點 🧩 打開核心盤。<br>
 ・<b>連結</b>：上下左右相鄰的同屬性模組，每條連結使雙方效果 +15%。<br>
 ・<b>合成</b>：把模組拖到「相同名稱、相同星數」的模組上，升一星（★→★★→★★★）。<br>
-・<b>共鳴</b>：同屬性的星數點數（★=1、★★=2、★★★=4）累計達 3／6／10 點，啟動屬性共鳴效果。<br>
+・<b>共鳴</b>：同屬性的星數點數（★=1、★★=2、★★★=4）累計達 3／6／10／15 點，啟動屬性共鳴效果。<br>
 ・拖到「拆解」可換成金幣；備用槽裡的模組不會生效。
 <h3>地圖上的東西</h3>
 📦 寶箱：三選一模組　💎 晶簇：碎晶　🪙 金幣　🧪 藥水<br>
@@ -1004,7 +1009,14 @@ function endRun(kind){
 
 // ============================================================ rendering (canvas)
 const cv=$('#cv'),ctx=cv.getContext('2d'),mapCv=document.createElement('canvas');mapCv.width=W*TS;mapCv.height=H*TS;const mctx=mapCv.getContext('2d');
-function emo(c,ch,x,y,size){c.font=`${size}px ${EF}`;c.textAlign='center';c.textBaseline='middle';c.fillText(ch,x,y+size*.06);}
+// emoji fonts place glyphs differently (Segoe vs Apple Color Emoji), so measure each glyph's ink box once and center on it
+const EMO_OFF={};
+function emoOff(ch){let o=EMO_OFF[ch];if(o)return o;const S=64,P=S*2,oc=document.createElement('canvas');oc.width=oc.height=P;const x=oc.getContext('2d',{willReadFrequently:true});
+  x.font=`${S}px ${EF}`;x.textAlign='center';x.textBaseline='middle';x.fillStyle='#fff';x.fillText(ch,P/2,P/2);
+  let d=null;try{d=x.getImageData(0,0,P,P).data;}catch(e){}let x0=P,y0=P,x1=-1,y1=-1;
+  if(d)for(let y=0;y<P;y++)for(let i=0;i<P;i++)if(d[(y*P+i)*4+3]>16){if(i<x0)x0=i;if(i>x1)x1=i;if(y<y0)y0=y;if(y>y1)y1=y;}
+  o=x1<0?[0,.06]:[(P-x0-x1-1)/2/S,(P-y0-y1-1)/2/S];return EMO_OFF[ch]=o;}
+function emo(c,ch,x,y,size){const o=emoOff(ch);c.font=`${size}px ${EF}`;c.textAlign='center';c.textBaseline='middle';c.fillText(ch,x+o[0]*size,y+o[1]*size);}
 function drawMap(){
   const c=mctx,th=F.theme;c.setTransform(MS,0,0,MS,0,0);c.fillStyle='#06070b';c.fillRect(0,0,W*TS,H*TS);
   for(let y=0;y<H;y++)for(let x=0;x<W;x++){const i=I(x,y);if(!F.seen[i])continue;const px=x*TS,py=y*TS;
@@ -1082,7 +1094,7 @@ function renderTop(){
    <span data-tip="已探索的比例。完整探索一層可獲得額外金幣與碎晶">🗺️ <b>${F.boss?'—':Math.floor(F.explN/F.floorN*100)+'%'}</b></span>
    <span>⏱ <b>${mm}:${ss}</b></span><span>☠ <b>${R.kills}</b></span>
    <span data-tip="金幣：本場使用，可在技師與鍛造台消費">🪙 <b>${R.gold}</b></span><span data-tip="碎晶：探索結束後帶回基地，用於永久強化">💎 <b>${R.shards}</b></span>
-   <span class="sp">${g?`🎯 下個里程碑：${g.name}（${g.desc}　${fmt(Math.min(g.val(),g.goal))}/${g.goal}）`:''}</span>`);
+   <span class="sp">${g?`🎯 下個里程碑：${g.name}（${g.desc}　${fmt(Math.min(g.val(),g.goal))}/${g.goal}）`:''}</span><span class="tver">版本 ${VERSION}</span>`);
   setHTML($('#tbtns'),`<button data-act="help">${KT('說明 (H)','📖')}</button><button data-act="mute">${meta.mute?'🔇':'🔊'}</button><button data-act="quit">${KT('結束探索','✕')}</button>`);
 }
 function renderHud(){const p=R.p,S=R.stats,need=xpNeed(p.lvl);
@@ -1129,7 +1141,9 @@ function renderSide(){
     h+=`<div class="set ${pts>0?'on':''}" style="--c:${t.color}" data-tip="${esc(setTip(tag))}"><span>${t.icon}</span><span>${t.name}</span><b>${pts}</b><span class="pp">${SET_NEED.map((nd,i)=>`<i class="${tier>i?'a':''}"></i>`).join('')}</span></div>`;}
   h+='</div></div><div class="bench"><span class="lab">備用</span>';
   for(let i=0;i<R.bench.length;i++)h+=slotHTML('b'+i,'',false);
-  h+=`<div class="bin" data-slot="bin" data-tip="把模組拖到這裡拆解：★ 12、★★ 35、★★★ 90 金幣">♻️<span>拆解</span></div></div></div>`;
+  h+=`<div class="bin" data-slot="bin" data-tip="把模組拖到這裡拆解：★ 12、★★ 35、★★★ 90 金幣">♻️<span>拆解</span></div></div>`;
+  const dt=sel&&modTip(sel);
+  h+=`<div class="mdet">${dt||'<small>點一下模組查看詳細資訊；選取後再點另一格可搬移，點相同模組可合成，再點一次取消選取</small>'}</div></div>`;
   h+=`<div class="box"><h4><span>遺物</span><span>${R.relics.length}</span></h4><div class="relics">${R.relics.length?R.relics.map(id=>`<span data-tip="${esc(`<b style='color:#ffd08a'>${REL[id].icon} ${REL[id].name}</b><br>${REL[id].d}`)}">${REL[id].icon}</span>`).join(''):'<em>擊敗首領、神龕或技師處可取得</em>'}</div></div>`;
   h+='<div class="box skbox"><div class="skills">';
   for(let i=0;i<3;i++){const ok=skillOk(i),cd=p.cd[i];
@@ -1227,6 +1241,9 @@ document.addEventListener('pointerup',e=>{if(lp&&lp.id===e.pointerId)cancelLP();
 document.addEventListener('pointercancel',cancelLP,true);
 document.addEventListener('click',e=>{if(lpFired){lpFired=false;e.preventDefault();e.stopPropagation();}},true);
 document.addEventListener('contextmenu',e=>{if(MOB)e.preventDefault();});
+// iOS: a held touch can be claimed by the system (callout / haptic touch) and sends pointercancel, killing the long-press.
+// Blocking the touch default is safe only where input is handled by pointer events, not click: the map and module slots.
+document.addEventListener('touchstart',e=>{const t=e.target;if(t===cv||(t.closest&&t.closest('#side [data-slot]')))e.preventDefault();},{passive:false});
 document.addEventListener('pointermove',e=>{
   if(drag&&drag.has&&drag.id===e.pointerId){if(!drag.moved&&Math.hypot(e.clientX-drag.x,e.clientY-drag.y)>6){drag.moved=true;cancelLP();const m=getM(drag.ref);if(m){ghost.textContent=MOD[m.id].icon;ghost.style.display='block';}hideTip();}
     if(drag.moved){ghost.style.left=e.clientX-24+'px';ghost.style.top=e.clientY-(e.pointerType==='mouse'?24:72)+'px';return;}}
