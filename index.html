@@ -260,6 +260,8 @@ body.mob{font-size:14px}
 .mob .toast{font-size:14px;padding:7px 14px;max-width:100%}
 .mob #tip{max-width:min(330px,calc(100vw - 16px))}
 #hV{font-size:13px;letter-spacing:1px;color:#aab6d0}
+.lockn{background:#2a1d12;border:1px solid #e69a35;border-radius:8px;padding:10px 14px;margin-bottom:14px;color:#ffe9b8;line-height:1.6}
+.carryn{color:#ffd08a;margin:8px 0 0}
 #top .tver{font-size:12px;color:#5d6a8a}
 .mob #top .tver{font-size:10px}
 @keyframes nag{50%{background:#d58a24;border-color:#ffd08a;color:#fff;box-shadow:0 0 16px #ffb54d}}
@@ -307,7 +309,7 @@ const W=45,H=26,TS=32;
 const I=(x,y)=>y*W+x;
 const EF='"Segoe UI Emoji","Noto Color Emoji","Apple Color Emoji",sans-serif';
 const KEY='abyss_scavenger_save_v1';
-const VERSION='2026-10-13 15:59';
+const VERSION='2026-10-14 11:53';
 
 // ============================================================ data
 const TAGS={
@@ -449,7 +451,7 @@ const STAT_NAME={atk:'攻擊',def:'護甲',crit:'暴擊率%',critDmg:'暴擊傷�
 
 // ============================================================ meta / save
 let meta=null,R=null,F=null;
-function defaultMeta(){return{v:1,shards:0,cores:0,up:{},codex:{mod:{},relic:{},mon:{}},monKills:{},done:{},mute:false,saved:null,seenHelp:false,
+function defaultMeta(){return{v:1,shards:0,cores:0,up:{},codex:{mod:{},relic:{},mon:{}},monKills:{},done:{},mute:false,saved:null,seenHelp:false,carry:0,
   stats:{runs:0,maxDepth:0,bossDepth:0,kills:0,merge2:0,merge3:0,maxSet:0,maxHit:0,totalShards:0,explore:0,forges:0,fullRig:0,noHit:0,runKills:0,fastWin:0,chests:0,maxLvl:1,returns:0}};}
 function loadMeta(){meta=defaultMeta();try{const s=localStorage.getItem(KEY);if(s){const o=JSON.parse(s),d=defaultMeta();meta=Object.assign(d,o);meta.stats=Object.assign(defaultMeta().stats,o.stats||{});meta.codex=Object.assign({mod:{},relic:{},mon:{}},o.codex||{});}}catch(e){}}
 function save(){try{localStorage.setItem(KEY,JSON.stringify(meta));}catch(e){}}
@@ -966,6 +968,7 @@ function shrineModal(o,i){
 }
 function helpHTML(){return `<div class="ver">版本：<b>${VERSION}</b>（台灣時間 UTC+8）</div><h3>目標</h3>
 一層層往下探索，蒐集<b>模組</b>組裝你的<b>核心盤</b>，擊敗第 4、8 層的首領。每次擊敗首領後都可以選擇凱旋而歸（碎晶 +25%），或繼續往下挑戰。<br>
+<b>主動撤離</b>有獎勵：下次出發時攜帶身上金幣與模組拆解價值的一部分（第 2 層以後按「結束探索」（手機為 ✕）撤離 25%，首領後凱旋 50%；陣亡則沒有）。探索尚未結束時無法使用工坊。<br>
 每場帶回的 💎 碎晶可在基地<b>工坊</b>永久強化；達成<b>里程碑</b>與擊敗首領可獲得 🔶 古核，解鎖更多格位與技能。
 <h3>操作</h3>
 <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> 或方向鍵：移動／撞擊敵人即攻擊<br>
@@ -996,16 +999,20 @@ function helpHTML(){return `<div class="ver">版本：<b>${VERSION}</b>（台灣
 ・進度會自動儲存在這個瀏覽器的本機儲存空間（localStorage），不會上傳到任何伺服器。<br>
 ・清除瀏覽器的網站資料、使用無痕／私密瀏覽、換瀏覽器或換裝置時，都看不到原本的進度。`;}
 function helpModal(){const m={kind:'help',full:false};m.leave=()=>closeModal();m.html=()=>`<div class="mbox wide"><h2>📖 遊戲說明</h2><div class="help" style="text-align:left">${helpHTML()}</div><div class="mbtns">`+btn(m,'開始探索（Esc）',m.leave,'pri')+'</div></div>';return m;}
-function quitModal(){const m={kind:'quit'};m.leave=()=>closeModal();m.html=()=>`<div class="mbox"><h2>結束這場探索？</h2><p class="sub">已獲得的 💎 ${R.shards} 碎晶會帶回基地。</p><div class="mbtns">`+btn(m,'結束並回基地',()=>{closeModal();endRun('dead');},'warn')+btn(m,'繼續探索（Esc）',m.leave)+'</div></div>';return m;}
+// voluntary return: part of the run's gold + module scrap value is carried into the next run (latest return only)
+const CARRY_RATE={evac:.25,return:.5};
+const runValue=()=>R.gold+[...R.rig,...R.bench].reduce((a,m)=>a+(m?[12,35,90][m.lv-1]:0),0);
+const carryOf=kind=>kind==='evac'&&R.depth<2?0:Math.round(runValue()*(CARRY_RATE[kind]||0));
+function quitModal(){const m={kind:'quit'};m.leave=()=>closeModal();m.html=()=>{const c=carryOf('evac');return `<div class="mbox"><h2>撤離回地面？</h2><p class="sub">已獲得的 💎 ${R.shards} 碎晶會帶回基地。<br>${c?`主動撤離獎勵：下次出發攜帶 🪙${c}（身上金幣與模組拆解價值的 25%）`:'抵達第 2 層以後主動撤離，下次出發可攜帶部分金幣。'}</p><div class="mbtns">`+btn(m,'撤離並回基地',()=>{closeModal();endRun('evac');},'warn')+btn(m,'繼續探索（Esc）',m.leave)+'</div></div>';};return m;}
 function endRun(kind){
   if(R.over)return;R.over=true;auto=null;targeting=false;modalQ=[];
-  const bonus=kind==='return'?Math.round(R.shards*.25):0,total=R.shards+bonus;
-  meta.shards+=total;st().totalShards+=total;st().runs++;meta.saved=null;checkMiles();save();
+  const bonus=kind==='return'?Math.round(R.shards*.25):0,total=R.shards+bonus,carry=carryOf(kind);
+  meta.carry=carry;meta.shards+=total;st().totalShards+=total;st().runs++;meta.saved=null;checkMiles();save();
   if(kind==='dead')sfx('bad');
   const mm=Math.floor(R.elapsed/60),ss=String(Math.floor(R.elapsed%60)).padStart(2,'0');
   const m={kind:'summary'};m.leave=()=>{closeModal();showHub();};
-  m.html=()=>`<div class="mbox sumbox"><h2>${kind==='return'?'🏆 凱旋而歸':'💀 探索結束'}</h2><p class="sub">${kind==='return'?'你帶著滿滿的戰利品回到了基地。':'這次倒在了第 '+R.depth+' 層。帶回的碎晶會讓下一次走得更遠。'}</p>
-    <div class="sum"><div><b>${R.depth}</b><small>抵達層數</small></div><div><b>${R.kills}</b><small>擊殺</small></div><div><b>Lv.${R.p.lvl}</b><small>等級</small></div><div><b>${mm}:${ss}</b><small>用時</small></div><div><b style="color:#b3e5fc">💎 ${total}</b><small>帶回碎晶${bonus?`（含凱旋 +${bonus}）`:''}</small></div></div>
+  m.html=()=>`<div class="mbox sumbox"><h2>${kind==='return'?'🏆 凱旋而歸':kind==='evac'?'🏠 撤離成功':'💀 探索結束'}</h2><p class="sub">${kind==='return'?'你帶著滿滿的戰利品回到了基地。':kind==='evac'?'你在第 '+R.depth+' 層主動撤離，平安回到了地面。':'這次倒在了第 '+R.depth+' 層。帶回的碎晶會讓下一次走得更遠。'}</p>
+    <div class="sum"><div><b>${R.depth}</b><small>抵達層數</small></div><div><b>${R.kills}</b><small>擊殺</small></div><div><b>Lv.${R.p.lvl}</b><small>等級</small></div><div><b>${mm}:${ss}</b><small>用時</small></div><div><b style="color:#b3e5fc">💎 ${total}</b><small>帶回碎晶${bonus?`（含凱旋 +${bonus}）`:''}</small></div>${carry?`<div><b style="color:#ffd08a">🪙 ${carry}</b><small>下次出發攜帶</small></div>`:''}</div>
     ${R.newMiles.length?`<div class="newl">🏆 達成里程碑：<b>${R.newMiles.join('、')}</b></div>`:''}
     ${R.newCodex.length?`<div class="newl">📘 圖鑑新增 ${R.newCodex.length} 項：${R.newCodex.join('、')}</div>`:''}
     <div class="mbtns">`+btn(m,'返回基地（Enter）',m.leave,'pri')+'</div></div>';
@@ -1163,9 +1170,9 @@ function renderSide(){
 // ============================================================ hub
 let hubTab='go';const hubM={acts:[]};let resetArm=false;
 function showHub(){R=null;F=null;modalQ=[];toggleDrawer(false);renderModal();$('#game').classList.add('hidden');$('#hub').classList.remove('hidden');checkMiles();renderHub();}
-const canBuy=u=>{const l=U(u.id);return l<u.max&&(u.cur==='s'?meta.shards:meta.cores)>=u.cost(l);};
+const canBuy=u=>{const l=U(u.id);return !meta.saved&&l<u.max&&(u.cur==='s'?meta.shards:meta.cores)>=u.cost(l);};
 const buyableN=()=>UPG.filter(canBuy).length;
-function buy(u){const l=U(u.id);if(l>=u.max)return false;const c=u.cost(l);if(u.cur==='s'){if(meta.shards<c)return false;meta.shards-=c;}else{if(meta.cores<c)return false;meta.cores-=c;}meta.up[u.id]=l+1;sfx('merge');save();return true;}
+function buy(u){const l=U(u.id);if(meta.saved||l>=u.max)return false;const c=u.cost(l);if(u.cur==='s'){if(meta.shards<c)return false;meta.shards-=c;}else{if(meta.cores<c)return false;meta.cores-=c;}meta.up[u.id]=l+1;sfx('merge');save();return true;}
 function renderHub(){
   hubM.acts=[];$('#hS').textContent=fmt(meta.shards);$('#hC').textContent=meta.cores;$('#hV').textContent='版本 '+VERSION;const nb=buyableN();
   const tabs=[['go','⚔️ 出擊'],['shop','🔧 工坊'],['codex',`📘 圖鑑 ${codexCount()}/${CODEX_TOTAL}`],['miles',`🏆 里程碑 ${Object.keys(meta.done).length}/${MILES.length}`],['help','📖 說明']];
@@ -1177,15 +1184,16 @@ function renderHub(){
       <p>古老的深淵之下埋藏著失落文明的模組與遺物。<br>下潛、蒐集、組裝你的核心盤——每一次歸來，都會讓下一次走得更遠。</p>
       <div class="gobtns">${sv?btn(hubM,`▶ 繼續探索（第 ${sv.depth} 層）`,()=>startRun(true),'pri'):''}${btn(hubM,sv?'重新開始':'▶ 開始探索',()=>startRun(false),sv?'':'pri')}</div>
       <div class="steps"><div><b>① 探索</b>每層地圖隨機生成。打怪、開寶箱、採晶簇，找到 🕳️ 前往下一層。</div><div><b>② 組裝</b>把模組擺上核心盤：同屬性相鄰有連結加成，相同模組可合成升星。</div><div><b>③ 成長</b>帶回 💎 碎晶永久強化，達成里程碑解鎖新格位與技能。</div></div>
+      ${meta.carry>0?`<p class="carryn">🎒 上次主動撤離的獎勵：下次出發攜帶 🪙${fmt(meta.carry)}</p>`:''}
       <small style="color:#5d6a8a">一場約 10～30 分鐘 ・ 進度自動儲存</small></div>
      <div style="display:flex;flex-direction:column;gap:16px"><div class="panel"><h3>📊 紀錄</h3><div class="recs">
       <div>最深抵達<b>第 ${s.maxDepth} 層</b></div><div>探索場數<b>${s.runs}</b></div><div>擊敗首領最深<b>${s.bossDepth?'第 '+s.bossDepth+' 層':'—'}</b></div><div>累計擊殺<b>${s.kills}</b></div>
       <div>最高單擊傷害<b>${s.maxHit}</b></div><div>累計碎晶<b>${fmt(s.totalShards)}</b></div><div>圖鑑收錄<b>${codexCount()} / ${CODEX_TOTAL}</b></div><div>圖鑑加成<b>+${codexBonus()}%</b></div></div></div>
      <div class="panel" style="flex:1"><h3>🎯 接下來的目標</h3>${nextGoals(4).map(m=>`<div class="goal"><div class="gn"><b>${m.name}</b><span>${m.s?'💎'+m.s+' ':''}${m.c?'🔶'+m.c:''}</span></div><small>${m.desc}　（${fmt(Math.min(m.val(),m.goal))} / ${m.goal}）</small><div class="pbar"><i style="width:${clamp(m.val()/m.goal*100,0,100)}%"></i></div></div>`).join('')||'<p>所有里程碑都已達成，了不起！</p>'}</div></div></div>`;
   }else if(hubTab==='shop'){
-    const card=u=>{const l=U(u.id),mx=l>=u.max,c=mx?0:u.cost(l),can=!mx&&(u.cur==='s'?meta.shards>=c:meta.cores>=c);
+    const lock=!!meta.saved,card=u=>{const l=U(u.id),mx=l>=u.max,c=mx?0:u.cost(l),can=canBuy(u);
       return `<div class="up ${mx?'max':''}"><div class="ui">${u.icon}</div><div class="ut"><b>${u.name}</b><span>${l} / ${u.max}</span><small>${u.eff(l)}${mx?'':` → <em>${u.eff(l+1)}</em>`}</small></div>${mx?'<button disabled>已滿級</button>':btn(hubM,`${u.cur==='s'?'💎':'🔶'} ${fmt(c)}`,()=>{buy(u);renderHub();},can?'pri':'',!can)}</div>`;};
-    h=`<div class="sect">💎 碎晶強化<small>探索中獲得的碎晶，在這裡換成永久能力</small></div><div class="grid3">${UPG.filter(u=>u.cur==='s').map(card).join('')}</div>
+    h=(lock?`<div class="lockn">🔒 第 ${meta.saved.depth} 層的探索尚未結束。請先繼續探索並結束它（或在出擊頁重新開始），回到地面後才能使用工坊。</div>`:'')+`<div class="sect">💎 碎晶強化<small>探索中獲得的碎晶，在這裡換成永久能力</small></div><div class="grid3">${UPG.filter(u=>u.cur==='s').map(card).join('')}</div>
        <div class="sect" style="margin-top:22px">🔶 古核解鎖<small>擊敗首領（每次 +1）與達成里程碑可獲得古核</small></div><div class="grid3">${UPG.filter(u=>u.cur==='c').map(card).join('')}</div>`;
   }else if(hubTab==='codex'){
     h=`<div class="sect">圖鑑加成<small>每收錄 5 項，所有傷害與最大生命 +2%　（目前 +${codexBonus()}%）</small></div>`;
@@ -1212,8 +1220,10 @@ function startRun(resume){
     for(let i=0;i<9;i++)R.rig[i]=sv.rig[i]||null;for(let i=0;i<R.bench.length;i++)R.bench[i]=(sv.bench||[])[i]||null;Object.assign(R.p,sv.p);}
   $('#hub').classList.add('hidden');$('#game').classList.remove('hidden');resizeCv();
   computeStats();if(!(resume&&sv))R.p.hp=R.stats.maxHp;
+  const carry=!(resume&&sv)&&meta.carry>0?meta.carry:0;if(carry){R.gold+=carry;meta.carry=0;}
   enterFloor(resume&&sv?sv.depth:1,resume&&sv);
   if(!(resume&&sv)){log(KT('按 <b>F</b> 自動探索，撞擊敵人即可攻擊。按 <b>H</b> 查看說明。','點 <b>🧭</b> 自動探索，用方向鍵撞擊敵人即可攻擊。點 <b>📖</b> 查看說明。'),'b');
+    if(carry)log(`🎒 攜帶上次撤離帶回的 🪙${carry} 出發。`,'g');
     for(let i=0;i<U('kit');i++)choiceModal({title:'🎁 預載模組',sub:'挑選一個開局模組',gen:()=>rollModules(3).map(modOpt),reroll:true});
     if(!meta.seenHelp){meta.seenHelp=true;save();pushModal(helpModal());}}
   uiDirty=true;mapDirty=true;
