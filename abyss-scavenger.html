@@ -266,6 +266,7 @@ body.mob{font-size:14px}
 .death .dk{font-size:16px;margin-bottom:6px}.death .dk b{color:#ff8a80}
 .death table{width:100%;border-collapse:collapse;margin-bottom:4px}.death th,.death td{padding:4px 6px;border-bottom:1px solid #3a2028;text-align:left}
 .death th{color:#c9697c;font-weight:400;font-size:12px}.death td small{display:block;color:#8f7880;font-size:11px}.death>small{color:#8f7880}
+.death .mfl,.death .mfh{display:none}.mob .death .mfh,.mob .death .mfl{display:inline}.mob .death .fl,.mob .death .dsk,.mob .death .sep{display:none}.mob .death .tt{display:block}.death td{white-space:nowrap}.death td:first-child,.death td:nth-child(3){white-space:normal}
 .mob .death{font-size:12px;padding:8px}.mob .death th,.mob .death td{padding:3px 4px}
 #top .tver{font-size:12px;color:#5d6a8a}
 .mob #top .tver{font-size:10px}
@@ -314,7 +315,7 @@ const W=45,H=26,TS=32;
 const I=(x,y)=>y*W+x;
 const EF='"Segoe UI Emoji","Noto Color Emoji","Apple Color Emoji",sans-serif';
 const KEY='abyss_scavenger_save_v1';
-const VERSION='2026-10-22 18:20';
+const VERSION='2026-10-22 18:37';
 
 // ============================================================ data
 const TAGS={
@@ -345,7 +346,7 @@ const MODULES=[
  {id:'c3',tag:'frost',icon:'🌬️',name:'寒流導管',st:{dodge:[5,11,24]},d:'閃避 +{dodge}%'},
  {id:'c4',tag:'frost',icon:'💠',name:'永凍核心',st:{hp:[12,28,65]},d:'最大生命 +{hp}'},
  {id:'c5',tag:'frost',icon:'🌨️',name:'雪盲力場',st:{weaken:[10,20,40]},d:'敵人對你造成的傷害 -{weaken}%'},
- {id:'v1',tag:'volt',icon:'⚡',name:'電弧線圈',st:{chain:[20,40,80]},d:'攻擊有 {chain}% 機率釋放連鎖閃電（60% 傷害）'},
+ {id:'v1',tag:'volt',icon:'⚡',name:'電弧線圈',st:{chain:[20,40,80]},d:'攻擊有 {chain}% 機率釋放連鎖閃電（60% 傷害；雷電共鳴 15 點時 90%）'},
  {id:'v2',tag:'volt',icon:'🎯',name:'聚焦透鏡',st:{crit:[6,13,28]},d:'暴擊率 +{crit}%'},
  {id:'v3',tag:'volt',icon:'🔋',name:'超導電容',st:{critDmg:[25,55,125]},d:'暴擊傷害 +{critDmg}%'},
  {id:'v4',tag:'volt',icon:'⏩',name:'加速器',st:{extraTurn:[6,13,28]},d:'攻擊後有 {extraTurn}% 機率立即再行動一次'},
@@ -1014,8 +1015,8 @@ const carryOf=kind=>kind==='evac'&&R.depth<2?0:Math.round(runValue()*(CARRY_RATE
 function quitModal(){const m={kind:'quit'};m.leave=()=>closeModal();m.html=()=>{const c=carryOf('evac');return `<div class="mbox"><h2>撤離回地面？</h2><p class="sub">已獲得的 💎 ${R.shards} 碎晶會帶回基地。<br>${c?`主動撤離獎勵：下次出發攜帶 🪙${c}（身上金幣與模組拆解價值的 25%）`:'抵達第 2 層以後主動撤離，下次出發可攜帶部分金幣。'}</p><div class="mbtns">`+btn(m,'撤離並回基地',()=>{closeModal();endRun('evac');},'warn')+btn(m,'繼續探索（Esc）',m.leave)+'</div></div>';};return m;}
 const clock=t=>`${Math.floor(t/60)}:${String(Math.floor(t%60)).padStart(2,'0')}`;
 function deathHTML(){const h=R.hits,k=h[h.length-1];
-  return `<div class="death"><div class="dk">💀 致命一擊：<b>${k.who}</b> 的${k.how}（第 ${k.depth} 層）</div><table><tr><th>來源</th><th>方式</th><th>減免後傷害</th><th>受擊時間</th><th>樓層</th></tr>`+
-    h.slice().reverse().map(x=>`<tr><td>${x.who}</td><td>${x.how}</td><td><b>${x.dmg}</b>${x.raw!==x.dmg+x.shield||x.shield?`<small>（原始 ${x.raw}${x.shield?`，護盾吸收 ${x.shield}`:''}）</small>`:''}</td><td>第 ${x.turn} 回合 ・ ${clock(x.t)}</td><td>第 ${x.depth} 層</td></tr>`).join('')+'</table><small>最近受到的 3 次傷害，由新到舊</small></div>';}
+  return `<div class="death"><div class="dk">💀 致命一擊：<b>${k.who}</b> 的${k.how}（第 ${k.depth} 層）</div><table><tr><th>來源</th><th>方式</th><th>減免後傷害</th><th><span class="dsk">受擊時間</span><span class="mfh">時間・樓層</span></th><th class="fl">樓層</th></tr>`+
+    h.slice().reverse().map(x=>`<tr><td>${x.who}</td><td>${x.how}</td><td><b>${x.dmg}</b>${x.raw!==x.dmg+x.shield||x.shield?`<small>（原始 ${x.raw}${x.shield?`，護盾吸收 ${x.shield}`:''}）</small>`:''}</td><td><span class="tt">第 ${x.turn} 回合</span><span class="sep"> ・ </span>${clock(x.t)}<span class="mfl"> ・ 第 ${x.depth} 層</span></td><td class="fl">第 ${x.depth} 層</td></tr>`).join('')+'</table><small>最近受到的 3 次傷害，由新到舊</small></div>';}
 function endRun(kind){
   if(R.over)return;R.over=true;auto=null;targeting=false;modalQ=[];
   const bonus=kind==='return'?Math.round(R.shards*.25):0,total=R.shards+bonus,carry=carryOf(kind);
