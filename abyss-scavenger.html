@@ -262,6 +262,11 @@ body.mob{font-size:14px}
 #hV{font-size:13px;letter-spacing:1px;color:#aab6d0}
 .lockn{background:#2a1d12;border:1px solid #e69a35;border-radius:8px;padding:10px 14px;margin-bottom:14px;color:#ffe9b8;line-height:1.6}
 .carryn{color:#ffd08a;margin:8px 0 0}
+.death{max-width:760px;margin:10px auto;background:#1a0f14;border:1px solid #8a3447;border-radius:8px;padding:10px 12px;font-size:14px;color:#e8c6cc}
+.death .dk{font-size:16px;margin-bottom:6px}.death .dk b{color:#ff8a80}
+.death table{width:100%;border-collapse:collapse;margin-bottom:4px}.death th,.death td{padding:4px 6px;border-bottom:1px solid #3a2028;text-align:left}
+.death th{color:#c9697c;font-weight:400;font-size:12px}.death td small{display:block;color:#8f7880;font-size:11px}.death>small{color:#8f7880}
+.mob .death{font-size:12px;padding:8px}.mob .death th,.mob .death td{padding:3px 4px}
 #top .tver{font-size:12px;color:#5d6a8a}
 .mob #top .tver{font-size:10px}
 @keyframes nag{50%{background:#d58a24;border-color:#ffd08a;color:#fff;box-shadow:0 0 16px #ffb54d}}
@@ -309,7 +314,7 @@ const W=45,H=26,TS=32;
 const I=(x,y)=>y*W+x;
 const EF='"Segoe UI Emoji","Noto Color Emoji","Apple Color Emoji",sans-serif';
 const KEY='abyss_scavenger_save_v1';
-const VERSION='2026-10-14 11:53';
+const VERSION='2026-10-22 18:20';
 
 // ============================================================ data
 const TAGS={
@@ -534,7 +539,7 @@ function setM(ref,m){if(ref[0]==='r')R.rig[+ref.slice(1)]=m;else R.bench[+ref.sl
 function refs(){const a=[];for(const i of SLOT_ORDER.slice(0,slotCount()))a.push('r'+i);for(let i=0;i<R.bench.length;i++)a.push('b'+i);return a;}
 const refOk=ref=>ref==='bin'||refs().includes(ref);
 function addB(k,v){R.p.bonus[k]=(R.p.bonus[k]||0)+v;computeStats();}
-function newRunObj(){return{depth:0,turn:0,elapsed:0,kills:0,gold:0,shards:0,forgeN:0,rerolls:U('reroll'),over:false,
+function newRunObj(){return{depth:0,turn:0,elapsed:0,kills:0,gold:0,shards:0,hits:[],forgeN:0,rerolls:U('reroll'),over:false,
   p:{x:0,y:0,rx:0,ry:0,hp:1,lvl:1,xp:0,potions:1+U('potion'),shield:0,bonus:{},poisonT:0,poisonD:0,cd:[0,0,0],over:0,killHp:0,hpPen:0,lsAcc:0},
   rig:Array(9).fill(null),bench:Array(3+U('bench')).fill(null),relics:[],log:[],newCodex:[],newMiles:[],fx:[],floats:[],tele:[],links:[],bossHit:false,stats:null};}
 function computeStats(){
@@ -641,7 +646,7 @@ function enterFloor(d,resume){
 }
 function revealAll(){for(let i=0;i<W*H;i++)if(F.tiles[i]){F.seen[i]=1;const x=i%W,y=(i/W)|0;for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++)F.seen[I(x+dx,y+dy)]=1;}}
 function saveRun(){const p=R.p;meta.saved={depth:R.depth,turn:R.turn,elapsed:R.elapsed,kills:R.kills,gold:R.gold,shards:R.shards,rerolls:R.rerolls,forgeN:R.forgeN,relics:R.relics,rig:R.rig,bench:R.bench,
-  newCodex:R.newCodex,newMiles:R.newMiles,p:{hp:p.hp,lvl:p.lvl,xp:p.xp,potions:p.potions,bonus:p.bonus,killHp:p.killHp,hpPen:p.hpPen}};save();}
+  newCodex:R.newCodex,newMiles:R.newMiles,hits:R.hits,p:{hp:p.hp,lvl:p.lvl,xp:p.xp,potions:p.potions,bonus:p.bonus,killHp:p.killHp,hpPen:p.hpPen}};save();}
 
 // ============================================================ fov / path
 function los(x0,y0,x1,y1){let dx=Math.abs(x1-x0),dy=Math.abs(y1-y0),sx=x0<x1?1:-1,sy=y0<y1?1:-1,err=dx-dy,x=x0,y=y0;
@@ -735,18 +740,21 @@ function bossDead(e){
   save();
 }
 function revive(){if(!hasRelic('phoenix'))return false;R.relics.splice(R.relics.indexOf('phoenix'),1);computeStats();R.p.hp=R.stats.maxHp*.5;R.p.poisonT=0;floatAt(R.p.x,R.p.y,'鳳凰復活！','#ffd54f',true);log('🪶 鳳凰羽燃盡，你重新站了起來！','g');sfx('mile');return true;}
+// last hits that actually cost HP, shown on the death summary
+const whoOf=e=>`${e.def.icon} ${e.elite?'菁英・':''}${e.def.name}`;
+function noteHit(who,how,raw,dmg,shield){R.hits.push({who,how,raw:Math.round(raw),dmg,shield,turn:R.turn,t:R.elapsed,depth:R.depth});if(R.hits.length>3)R.hits.shift();}
 function hurtPlayer(dmg,src,o){
-  if(R.over)return;o=o||{};const S=R.stats,p=R.p;
+  if(R.over)return;o=o||{};const S=R.stats,p=R.p,raw=dmg;let absorbed=0;
   if(!o.sure){if(Math.random()*100<S.dodge){floatAt(p.x,p.y,'閃避','#8fd0ff');return;}if(Math.random()*100<S.block){floatAt(p.x,p.y,'格擋','#8fd0ff');return;}}
   dmg*=1-S.weaken/100;dmg=Math.max(Math.ceil(dmg*.25),dmg-S.def);if(S.set.steel>=2)dmg*=.8;dmg=Math.max(1,Math.round(dmg));
-  if(p.shield>0){const a=Math.min(p.shield,dmg);p.shield-=a;dmg-=a;if(!dmg)floatAt(p.x,p.y,'護盾','#7fd4ff');}
-  if(dmg>0){p.hp-=dmg;R.bossHit=true;floatAt(p.x,p.y,'-'+dmg,'#ff5252',dmg>S.maxHp*.2);sfx('hurt');shake=Math.max(shake,5);auto=null;}
+  if(p.shield>0){const a=Math.min(p.shield,dmg);p.shield-=a;dmg-=a;absorbed=a;if(!dmg)floatAt(p.x,p.y,'護盾','#7fd4ff');}
+  if(dmg>0){noteHit(o.who||(src?whoOf(src):'未知來源'),o.how||'攻擊',raw,dmg,absorbed);p.hp-=dmg;R.bossHit=true;floatAt(p.x,p.y,'-'+dmg,'#ff5252',dmg>S.maxHp*.2);sfx('hurt');shake=Math.max(shake,5);auto=null;}
   if(src&&!src.dead&&o.melee){if(S.thorns>0)dealDamage(src,S.thorns,{color:'#b0bec5'});if(S.set.frost>=2&&!src.dead&&Math.random()<.3)applyFreeze(src,2);}
   if(p.hp<=0&&!revive())die();
   uiDirty=true;
 }
-function attackPlayer(e){e.rx+=(R.p.x-e.x)*.45;e.ry+=(R.p.y-e.y)*.45;hurtPlayer(e.atk,e,{melee:true});
-  if(e.def.venom&&!R.over){R.p.poisonT=3;R.p.poisonD=Math.max(1,Math.round(e.atk*.3));}}
+function attackPlayer(e){e.rx+=(R.p.x-e.x)*.45;e.ry+=(R.p.y-e.y)*.45;hurtPlayer(e.atk,e,{melee:true,how:'近戰'});
+  if(e.def.venom&&!R.over){R.p.poisonT=3;R.p.poisonD=Math.max(1,Math.round(e.atk*.3));R.p.poisonSrc=whoOf(e);}}
 function moveToward(e){const c=I(e.x,e.y),cur=F.dist[c];let best=[],bv=cur<0?1e9:cur;
   for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1]]){const n=I(e.x+dx,e.y+dy),v=F.dist[n];if(F.occ[n]&&v>=0&&v<cur)F.occ[n].awake=true;if(v<0||F.occ[n]||(R.p.x===e.x+dx&&R.p.y===e.y+dy))continue;if(v<bv){bv=v;best=[[dx,dy]];}else if(v===bv&&best.length&&bv<cur)best.push([dx,dy]);}
   if(best.length)stepEnemy(e,...pick(best));}
@@ -759,18 +767,18 @@ function bossAct(e,d){
   if(e.timer%4===0){const cells=[],kind=e.type==='boss1'?0:(R.depth>8&&Math.random()<.4?0:1);
     if(kind===0){for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++){const i=I(p.x+dx,p.y+dy);if(F.tiles[i])cells.push(i);}}
     else{for(let x=1;x<W-1;x++){const i=I(x,p.y);if(F.tiles[i])cells.push(i);}for(let y=1;y<H-1;y++){const i=I(p.x,y);if(F.tiles[i]&&y!==p.y)cells.push(i);}}
-    R.tele.push({cells,t:2,dmg:Math.round(e.atk*1.7)});floatAt(e.x,e.y,'蓄力！','#ff5252',true);sfx('bad');return;}
+    R.tele.push({cells,t:2,dmg:Math.round(e.atk*1.7),who:whoOf(e),how:kind===0?'範圍重擊':'十字光束'});floatAt(e.x,e.y,'蓄力！','#ff5252',true);sfx('bad');return;}
   if(d===1)attackPlayer(e);else moveToward(e);
 }
 function enemyAction(e){
   const p=R.p,d=Math.abs(e.x-p.x)+Math.abs(e.y-p.y),df=e.def;
   if(e.boss){bossAct(e,d);return;}
-  if(df.bomb){if(e.fuse>0){e.fuse--;if(e.fuse===0){fxRing(e.x,e.y,1.6,'#ff5252');sfx('bad');const hit=cheb(e,p)<=1,dm=e.atk*5;killEnemy(e,true);if(hit)hurtPlayer(dm,null,{});}return;}
+  if(df.bomb){if(e.fuse>0){e.fuse--;if(e.fuse===0){fxRing(e.x,e.y,1.6,'#ff5252');sfx('bad');const hit=cheb(e,p)<=1,dm=e.atk*5,who=whoOf(e);killEnemy(e,true);if(hit)hurtPlayer(dm,null,{who,how:'自爆'});}return;}
     if(cheb(e,p)<=1){e.fuse=3;floatAt(e.x,e.y,'引信點燃！','#ff5252');return;}}
   else if(d===1){attackPlayer(e);return;}
   if(df.healer&&e.cd<=0){let t=null;for(const o of F.enemies)if(o!==e&&!o.dead&&o.hp<o.maxHp*.7&&cheb(o,e)<=5){t=o;break;}
     if(t){const h=Math.round(t.maxHp*.3);t.hp=Math.min(t.maxHp,t.hp+h);floatAt(t.x,t.y,'+'+h,'#8fe08f');fxLine(e,t,'#8fe08f');e.cd=3;return;}}
-  if(df.range&&d<=df.range&&F.vis[I(e.x,e.y)]){if(e.cd<=0){fxLine(e,p,'#ff8a80');hurtPlayer(e.atk,e,{});e.cd=1;}else e.cd--;return;}
+  if(df.range&&d<=df.range&&F.vis[I(e.x,e.y)]){if(e.cd<=0){fxLine(e,p,'#ff8a80');hurtPlayer(e.atk,e,{how:'遠程射擊'});e.cd=1;}else e.cd--;return;}
   if(e.cd>0)e.cd--;
   if(df.erratic&&Math.random()<df.erratic){stepEnemy(e,...pick([[1,0],[-1,0],[0,1],[0,-1]]));return;}
   moveToward(e);
@@ -786,13 +794,13 @@ function enemiesAct(){
     let n=e.def.speed||1;while(n-->0&&!e.dead&&!R.over)enemyAction(e);
   }
 }
-function tickTele(){for(const t of R.tele.slice()){t.t--;if(t.t<=0){R.tele.splice(R.tele.indexOf(t),1);fxCells(t.cells,'#ff5252');shake=Math.max(shake,8);sfx('bad');if(t.cells.includes(I(R.p.x,R.p.y)))hurtPlayer(t.dmg,null,{sure:true});}}}
+function tickTele(){for(const t of R.tele.slice()){t.t--;if(t.t<=0){R.tele.splice(R.tele.indexOf(t),1);fxCells(t.cells,'#ff5252');shake=Math.max(shake,8);sfx('bad');if(t.cells.includes(I(R.p.x,R.p.y)))hurtPlayer(t.dmg,null,{sure:true,who:t.who,how:t.how});}}}
 function endTurn(extra){
   const p=R.p,S=R.stats;R.turn++;
   for(let i=0;i<3;i++)if(p.cd[i]>0)p.cd[i]--;
   if(p.over>0)p.over--;
   if(S.regen)heal(S.regen);
-  if(p.poisonT>0){p.poisonT--;p.hp-=p.poisonD;floatAt(p.x,p.y,'-'+p.poisonD,'#9ccc65');if(p.hp<=0&&!revive()){die();return;}}
+  if(p.poisonT>0){p.poisonT--;noteHit(p.poisonSrc||'未知來源','中毒',p.poisonD,p.poisonD,0);p.hp-=p.poisonD;floatAt(p.x,p.y,'-'+p.poisonD,'#9ccc65');if(p.hp<=0&&!revive()){die();return;}}
   if(S.aura>0)for(const e of F.enemies.slice())if(!e.dead&&cheb(e,p)<=1)dealDamage(e,S.aura,{color:'#ffe98a'});
   if(extra)floatAt(p.x,p.y,'再行動！','#ffd54f');else{tickTele();if(!R.over){computeFov();enemiesAct();}}
   if(R.over)return;
@@ -1004,6 +1012,10 @@ const CARRY_RATE={evac:.25,return:.5};
 const runValue=()=>R.gold+[...R.rig,...R.bench].reduce((a,m)=>a+(m?[12,35,90][m.lv-1]:0),0);
 const carryOf=kind=>kind==='evac'&&R.depth<2?0:Math.round(runValue()*(CARRY_RATE[kind]||0));
 function quitModal(){const m={kind:'quit'};m.leave=()=>closeModal();m.html=()=>{const c=carryOf('evac');return `<div class="mbox"><h2>撤離回地面？</h2><p class="sub">已獲得的 💎 ${R.shards} 碎晶會帶回基地。<br>${c?`主動撤離獎勵：下次出發攜帶 🪙${c}（身上金幣與模組拆解價值的 25%）`:'抵達第 2 層以後主動撤離，下次出發可攜帶部分金幣。'}</p><div class="mbtns">`+btn(m,'撤離並回基地',()=>{closeModal();endRun('evac');},'warn')+btn(m,'繼續探索（Esc）',m.leave)+'</div></div>';};return m;}
+const clock=t=>`${Math.floor(t/60)}:${String(Math.floor(t%60)).padStart(2,'0')}`;
+function deathHTML(){const h=R.hits,k=h[h.length-1];
+  return `<div class="death"><div class="dk">💀 致命一擊：<b>${k.who}</b> 的${k.how}（第 ${k.depth} 層）</div><table><tr><th>來源</th><th>方式</th><th>減免後傷害</th><th>受擊時間</th><th>樓層</th></tr>`+
+    h.slice().reverse().map(x=>`<tr><td>${x.who}</td><td>${x.how}</td><td><b>${x.dmg}</b>${x.raw!==x.dmg+x.shield||x.shield?`<small>（原始 ${x.raw}${x.shield?`，護盾吸收 ${x.shield}`:''}）</small>`:''}</td><td>第 ${x.turn} 回合 ・ ${clock(x.t)}</td><td>第 ${x.depth} 層</td></tr>`).join('')+'</table><small>最近受到的 3 次傷害，由新到舊</small></div>';}
 function endRun(kind){
   if(R.over)return;R.over=true;auto=null;targeting=false;modalQ=[];
   const bonus=kind==='return'?Math.round(R.shards*.25):0,total=R.shards+bonus,carry=carryOf(kind);
@@ -1013,6 +1025,7 @@ function endRun(kind){
   const m={kind:'summary'};m.leave=()=>{closeModal();showHub();};
   m.html=()=>`<div class="mbox sumbox"><h2>${kind==='return'?'🏆 凱旋而歸':kind==='evac'?'🏠 撤離成功':'💀 探索結束'}</h2><p class="sub">${kind==='return'?'你帶著滿滿的戰利品回到了基地。':kind==='evac'?'你在第 '+R.depth+' 層主動撤離，平安回到了地面。':'這次倒在了第 '+R.depth+' 層。帶回的碎晶會讓下一次走得更遠。'}</p>
     <div class="sum"><div><b>${R.depth}</b><small>抵達層數</small></div><div><b>${R.kills}</b><small>擊殺</small></div><div><b>Lv.${R.p.lvl}</b><small>等級</small></div><div><b>${mm}:${ss}</b><small>用時</small></div><div><b style="color:#b3e5fc">💎 ${total}</b><small>帶回碎晶${bonus?`（含凱旋 +${bonus}）`:''}</small></div>${carry?`<div><b style="color:#ffd08a">🪙 ${carry}</b><small>下次出發攜帶</small></div>`:''}</div>
+    ${kind==='dead'&&R.hits.length?deathHTML():''}
     ${R.newMiles.length?`<div class="newl">🏆 達成里程碑：<b>${R.newMiles.join('、')}</b></div>`:''}
     ${R.newCodex.length?`<div class="newl">📘 圖鑑新增 ${R.newCodex.length} 項：${R.newCodex.join('、')}</div>`:''}
     <div class="mbtns">`+btn(m,'返回基地（Enter）',m.leave,'pri')+'</div></div>';
@@ -1216,7 +1229,7 @@ function renderHub(){
 }
 function startRun(resume){
   const sv=meta.saved;R=newRunObj();
-  if(resume&&sv){Object.assign(R,{turn:sv.turn,elapsed:sv.elapsed,kills:sv.kills,gold:sv.gold,shards:sv.shards,rerolls:sv.rerolls,forgeN:sv.forgeN||0,relics:sv.relics,newCodex:sv.newCodex||[],newMiles:sv.newMiles||[]});
+  if(resume&&sv){Object.assign(R,{turn:sv.turn,elapsed:sv.elapsed,kills:sv.kills,gold:sv.gold,shards:sv.shards,rerolls:sv.rerolls,forgeN:sv.forgeN||0,relics:sv.relics,newCodex:sv.newCodex||[],newMiles:sv.newMiles||[],hits:sv.hits||[]});
     for(let i=0;i<9;i++)R.rig[i]=sv.rig[i]||null;for(let i=0;i<R.bench.length;i++)R.bench[i]=(sv.bench||[])[i]||null;Object.assign(R.p,sv.p);}
   $('#hub').classList.add('hidden');$('#game').classList.remove('hidden');resizeCv();
   computeStats();if(!(resume&&sv))R.p.hp=R.stats.maxHp;
